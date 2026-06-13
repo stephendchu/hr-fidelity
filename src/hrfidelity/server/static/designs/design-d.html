@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design D — Bloomberg Dense</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#04080f;color:#c8c8c8;font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;line-height:1.45;min-height:100vh}
+nav{background:#020509;border-bottom:2px solid #ff7800;padding:0 1.5rem;display:flex;align-items:center;gap:3rem;height:44px}
+.logo{font-weight:700;font-size:.95rem;color:#ff7800;letter-spacing:.08em}
+.ticker{display:flex;align-items:center;gap:2rem;flex:1;margin-left:2rem}
+.tick-item{font-size:.75rem;display:flex;align-items:center;gap:.5rem}
+.tick-lbl{color:#556}
+.tick-val{color:#c8c8c8;font-weight:700}
+.tick-chg{color:#00c851;font-size:.72rem}
+nav a{color:#556;text-decoration:none;font-size:.78rem}
+nav a:hover{color:#ff7800}
+.top-bar{background:#02060c;border-bottom:1px solid #0e1c2e;padding:.5rem 1.5rem;display:flex;align-items:center;gap:3rem}
+.tb-item{font-size:.75rem;color:#556}
+.tb-item strong{color:#ff7800;margin-left:.3rem}
+.main{display:grid;grid-template-columns:260px 1fr 240px;gap:0;height:calc(100vh - 89px);overflow:hidden}
+.left-col{background:#02060c;border-right:1px solid #0e1c2e;padding:1rem;overflow-y:auto}
+.mid-col{padding:1rem;overflow-y:auto}
+.right-col{background:#02060c;border-left:1px solid #0e1c2e;padding:1rem;overflow-y:auto}
+.col-header{font-size:.7rem;font-weight:700;color:#ff7800;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #0e1c2e;padding-bottom:.4rem;margin-bottom:.8rem}
+.ctrl{margin-bottom:.7rem}
+.ctrl label{display:block;font-size:.68rem;color:#556;margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.06em}
+select{width:100%;background:#020509;border:1px solid #0e1c2e;color:#c8c8c8;padding:.32rem .5rem;font-size:.78rem;font-family:inherit}
+select:focus{outline:none;border-color:#ff7800}
+.srow{display:flex;align-items:center;gap:.5rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;background:#0e1c2e}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:#ff7800;border-radius:0}
+.sv{min-width:32px;text-align:right;font-size:.78rem;font-weight:700;color:#ff7800}
+.sep{border:none;border-top:1px solid #0e1c2e;margin:.7rem 0}
+.btn{width:100%;background:#ff7800;color:#000;border:none;padding:.5rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.06em;margin-top:.5rem}
+.btn:hover{background:#e06a00}
+/* verdict strip */
+.verdict-strip{background:#071219;border:1px solid #0e1c2e;padding:.6rem .8rem;margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between}
+.vs-lbl{font-size:.7rem;color:#556;text-transform:uppercase;letter-spacing:.06em}
+.vs-val{font-size:1rem;font-weight:700;color:#00c851;letter-spacing:.1em}
+.vs-val.blk{color:#ff3333}
+.vs-meta{font-size:.7rem;color:#556;margin-top:.25rem}
+/* data tables */
+.dtitle{font-size:.7rem;font-weight:700;color:#c8c8c8;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.4rem;margin-top:.6rem}
+.dtitle::before{content:'▸ ';color:#ff7800}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.65rem;color:#556;padding:.2rem 0;border-bottom:1px solid #0e1c2e;letter-spacing:.05em;text-transform:uppercase}
+td{padding:.2rem 0;font-size:.75rem;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:last-child td{border-bottom:none}
+td.r{text-align:right}
+td.gn{color:#00c851}
+td.rd{color:#ff3333}
+td.am{color:#ff7800}
+/* bar inline */
+.ib{display:inline-block;height:5px;vertical-align:middle;margin-right:.3rem}
+.ib-g{background:#00c851}
+.ib-r{background:#ff3333}
+.ib-a{background:#ff7800}
+/* right col stats */
+.stat-box{background:#071219;border:1px solid #0e1c2e;padding:.6rem .7rem;margin-bottom:.6rem}
+.sb-lbl{font-size:.65rem;color:#556;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
+.sb-val{font-size:1.4rem;font-weight:700;color:#ff7800;line-height:1}
+.sb-sub{font-size:.65rem;color:#556;margin-top:.15rem}
+.kbar-w{height:5px;background:#0e1c2e;margin:.4rem 0}
+.kbar-f{height:100%;background:#ff7800}
+.trend{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:.4rem}
+.bar-v{width:10px;background:#0e2a0e}
+.bar-v.a{background:#00c851}
+.status-row{display:flex;justify-content:space-between;align-items:center;font-size:.68rem;margin-top:.3rem}
+.st-gn{color:#00c851}
+.st-rd{color:#ff3333}
+.tog-r{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:#556;cursor:pointer}
+.tog-r input{width:11px;height:11px;accent-color:#ff7800}
+.name-warn{font-size:.68rem;color:#ff3333;margin-top:.3rem;display:none}
+</style></head><body>
+<nav>
+  <div class="logo">HRFIDELITY</div>
+  <div class="ticker">
+    <div class="tick-item"><span class="tick-lbl">KAPPA</span><span class="tick-val">0.773</span><span class="tick-chg">▲+0.12</span></div>
+    <div class="tick-item"><span class="tick-lbl">4/5 RATIO</span><span class="tick-val">1.000</span><span class="tick-chg">▲ PASS</span></div>
+    <div class="tick-item"><span class="tick-lbl">DRIFT</span><span class="tick-val">0.000</span><span class="tick-chg">▲ 0.00</span></div>
+    <div class="tick-item"><span class="tick-lbl">GOLD ACC</span><span class="tick-val">100%</span></div>
+  </div>
+  <a href="#">DOCS</a><a href="#">API</a>
+</nav>
+<div class="top-bar">
+  <div class="tb-item">AUDIT DATE<strong>2026-06-13</strong></div>
+  <div class="tb-item">REQ<strong>backend-eng</strong></div>
+  <div class="tb-item">N_RESUMES<strong>150</strong></div>
+  <div class="tb-item">N_PAIRS<strong>450</strong></div>
+  <div class="tb-item">DRIFT_THRESHOLD<strong>0.050</strong></div>
+  <div class="tb-item">STATUS<strong style="color:#00c851">● LIVE</strong></div>
+</div>
+<div class="main">
+  <!-- Left: config -->
+  <div class="left-col">
+    <div class="col-header">Screener Config</div>
+    <div class="ctrl"><label>req_id</label>
+      <select><option>backend-eng</option><option>infra-eng</option><option>ml-researcher</option></select></div>
+    <div class="ctrl"><label>prestige_bonus</label>
+      <div class="srow"><input type="range" value="0" min="0" max="50"><span class="sv">0.00</span></div></div>
+    <div class="ctrl"><label>skill_weight</label>
+      <div class="srow"><input type="range" value="60" min="30" max="90"><span class="sv">0.60</span></div></div>
+    <div class="ctrl"><label>adv_threshold</label>
+      <div class="srow"><input type="range" value="70" min="40" max="90"><span class="sv">0.70</span></div></div>
+    <hr class="sep">
+    <div class="ctrl"><label>Bias toggles</label>
+      <div class="tog-r"><input type="checkbox">Name signal (race/gender proxy)</div>
+      <div class="name-warn">⚠ Bias active — may BLOCK</div>
+    </div>
+    <button class="btn">▶ RUN AUDIT</button>
+    <hr class="sep">
+    <div class="dtitle" style="margin-top:.2rem">Config JSON</div>
+    <pre style="font-size:.68rem;color:#556;margin-top:.3rem;line-height:1.6">{
+  "prestige_bonus": 0.0,
+  "name_signal": false,
+  "skill_weight": 0.6,
+  "adv_threshold": 0.7
+}</pre>
+  </div>
+  <!-- Mid: data -->
+  <div class="mid-col">
+    <div class="verdict-strip">
+      <div>
+        <div class="vs-lbl">Audit verdict</div>
+        <div class="vs-val">✓ CERTIFIED</div>
+        <div class="vs-meta">backend-eng · 150 resumes · 450 pairs</div>
+      </div>
+      <div style="text-align:right">
+        <div class="vs-lbl">Timestamp</div>
+        <div style="font-size:.78rem;color:#c8c8c8;margin-top:.15rem">2026-06-13 21:17:32</div>
+        <div class="vs-lbl" style="margin-top:.2rem">Drift threshold</div>
+        <div style="font-size:.78rem;color:#ff7800">0.05</div>
+      </div>
+    </div>
+
+    <div class="dtitle">Four-fifths Disparate Impact (EEOC §60-3.4)</div>
+    <table>
+      <thead><tr><th>Group</th><th>Axis</th><th>N</th><th>Adv.</th><th>Sel.Rate</th><th class="r">Bar</th><th class="r">Ratio</th><th class="r">Status</th></tr></thead>
+      <tbody>
+        <tr><td>white</td><td>race</td><td>108</td><td>36</td><td>33.3%</td>
+          <td class="r"><span class="ib ib-g" style="width:50px"></span></td>
+          <td class="r gn">1.000</td><td class="r gn">PASS</td></tr>
+        <tr><td>black</td><td>race</td><td>42</td><td>14</td><td>33.3%</td>
+          <td class="r"><span class="ib ib-g" style="width:50px"></span></td>
+          <td class="r gn">1.000</td><td class="r gn">PASS</td></tr>
+      </tbody>
+    </table>
+
+    <div class="dtitle">Counterfactual Drift Analysis</div>
+    <table>
+      <thead><tr><th>Axis</th><th class="r">Mean Drift</th><th class="r">Max Drift</th><th class="r">Flip Rate</th><th class="r">N Pairs</th><th class="r">vs Threshold</th><th class="r">Status</th></tr></thead>
+      <tbody>
+        <tr><td>gender</td><td class="r gn">0.0000</td><td class="r">0.0000</td><td class="r">0.0%</td><td class="r">150</td>
+          <td class="r" style="color:#556">−0.0500</td><td class="r gn">PASS</td></tr>
+        <tr><td>prestige_tier</td><td class="r gn">0.0000</td><td class="r">0.0000</td><td class="r">0.0%</td><td class="r">150</td>
+          <td class="r" style="color:#556">−0.0500</td><td class="r gn">PASS</td></tr>
+        <tr><td>race_proxy</td><td class="r gn">0.0000</td><td class="r">0.0000</td><td class="r">0.0%</td><td class="r">150</td>
+          <td class="r" style="color:#556">−0.0500</td><td class="r gn">PASS</td></tr>
+      </tbody>
+    </table>
+
+    <div class="dtitle">Fidelity Calibration — Per Judge κ</div>
+    <table>
+      <thead><tr><th>Judge</th><th class="r">Cohen κ</th><th class="r">Obs. Agree.</th><th class="r">Exp. Agree.</th><th class="r">N Pairs</th><th class="r">Status</th></tr></thead>
+      <tbody>
+        <tr><td>recruiter_0</td><td class="r am">0.801</td><td class="r">90.0%</td><td class="r">49.8%</td><td class="r">20</td><td class="r gn">PASS</td></tr>
+        <tr><td>recruiter_1</td><td class="r am">0.729</td><td class="r">85.0%</td><td class="r">44.8%</td><td class="r">20</td><td class="r gn">PASS</td></tr>
+        <tr><td>recruiter_2</td><td class="r am">0.788</td><td class="r">90.0%</td><td class="r">52.8%</td><td class="r">20</td><td class="r gn">PASS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Right: stats -->
+  <div class="right-col">
+    <div class="col-header">Key Metrics</div>
+    <div class="stat-box">
+      <div class="sb-lbl">Mean κ (AI vs recruiter)</div>
+      <div class="sb-val">0.773</div>
+      <div class="sb-sub">Substantial agreement</div>
+      <div class="kbar-w"><div class="kbar-f" style="width:88%"></div></div>
+      <div class="status-row"><span style="color:#556">−1.0</span><span class="st-gn">▲ 0.60 thr</span><span style="color:#556">1.0</span></div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-lbl">Gold pair accuracy</div>
+      <div class="sb-val" style="color:#00c851">100%</div>
+      <div class="sb-sub">6 gold pairs · all correct</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-lbl">Worst 4/5 ratio</div>
+      <div class="sb-val" style="color:#00c851">1.000</div>
+      <div class="sb-sub">race_proxy:black = 1.00</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-lbl">Max drift (any axis)</div>
+      <div class="sb-val" style="color:#00c851">0.000</div>
+      <div class="sb-sub">All 3 axes at zero</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-lbl">Human-human κ baseline</div>
+      <div class="sb-val">0.636</div>
+      <div class="sb-sub">3 recruiter judges</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-lbl">Corpus</div>
+      <div class="sb-val" style="font-size:1rem">150 / 450</div>
+      <div class="sb-sub">résumés / pairs</div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:#556;margin-top:.3rem">
+        <span>strong:50</span><span>medium:50</span><span>weak:50</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design E — Clean Light Mode</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f8f9fb;color:#1a1d23;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+nav{background:#fff;border-bottom:1px solid #e8eaed;padding:0 2rem;display:flex;align-items:center;gap:2.5rem;height:56px;position:sticky;top:0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.logo{font-weight:800;font-size:1rem;color:#1a1d23;letter-spacing:-.02em}
+.logo span{color:#2563eb}
+nav a{color:#6b7280;text-decoration:none;font-size:.85rem}
+nav a:hover{color:#1a1d23}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.cert-badge{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;border-radius:99px;padding:.2rem .75rem;font-size:.75rem;font-weight:700;letter-spacing:.04em}
+.hero{background:#fff;border-bottom:1px solid #e8eaed;padding:2.5rem 2rem}
+.hero-inner{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center}
+.hero-text h1{font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.5rem}
+.hero-text h1 span{color:#2563eb}
+.hero-text p{color:#6b7280;font-size:.9rem;max-width:500px}
+.hero-stats{display:flex;gap:2rem;flex-shrink:0}
+.hstat{text-align:center;padding:1rem 1.5rem;background:#f8f9fb;border:1px solid #e8eaed;border-radius:12px}
+.hstat-n{font-size:1.5rem;font-weight:800;color:#2563eb}
+.hstat-l{font-size:.72rem;color:#6b7280;margin-top:.2rem}
+.main{max-width:1080px;margin:1.5rem auto;padding:0 2rem 3rem;display:grid;grid-template-columns:280px 1fr;gap:1.5rem;align-items:start}
+.card{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card+.card{margin-top:1rem}
+.ct{font-weight:700;font-size:.9rem;color:#1a1d23;margin-bottom:.9rem}
+.ctrl{margin-bottom:.9rem}
+.ctrl label{display:block;font-size:.75rem;font-weight:600;color:#6b7280;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em}
+select{width:100%;background:#f8f9fb;border:1px solid #e8eaed;border-radius:8px;color:#1a1d23;padding:.45rem .65rem;font-size:.88rem}
+select:focus{outline:none;border-color:#2563eb;background:#fff}
+.srow{display:flex;align-items:center;gap:.6rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:#e8eaed;border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:#2563eb;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #2563eb}
+.sv{min-width:34px;text-align:right;font-size:.82rem;font-weight:700;color:#2563eb}
+.trow{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#374151}
+.tog{position:relative;width:38px;height:21px}
+.tog input{opacity:0;width:0;height:0}
+.tog-t{position:absolute;inset:0;background:#e8eaed;border-radius:99px;transition:background .2s}
+.tog input:checked~.tog-t{background:#2563eb}
+.tog-th{position:absolute;width:15px;height:15px;top:3px;left:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);pointer-events:none}
+.tog input:checked~.tog-th{transform:translateX(17px)}
+.btn{width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:.65rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:.9rem;transition:background .15s}
+.btn:hover{background:#1d4ed8}
+/* verdict */
+.v-main{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:1rem}
+.v-main.fail{background:#fef2f2;border-color:#fecaca}
+.v-title{font-size:.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
+.v-val{font-size:1.2rem;font-weight:800;color:#16a34a}
+.v-val.fail{color:#dc2626}
+.v-sub{font-size:.78rem;color:#6b7280;margin-top:.2rem}
+.v-badge{display:inline-flex;align-items:center;gap:.35rem;background:#16a34a;color:#fff;border-radius:99px;padding:.35rem .9rem;font-size:.8rem;font-weight:700;letter-spacing:.04em}
+.v-badge.fail{background:#dc2626}
+.vdot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.7)}
+/* check cards */
+.check-card{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:.8rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.ch h3{font-size:.9rem;font-weight:700;color:#1a1d23}
+.pass-pill{background:#dcfce7;color:#16a34a;border-radius:99px;padding:.18rem .7rem;font-size:.74rem;font-weight:700}
+.fail-pill{background:#fee2e2;color:#dc2626;border-radius:99px;padding:.18rem .7rem;font-size:.74rem;font-weight:700}
+.sub-t{font-size:.76rem;color:#9ca3af;margin-bottom:.5rem}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.72rem;font-weight:600;color:#9ca3af;padding-bottom:.3rem;border-bottom:1px solid #f3f4f6;text-transform:uppercase;letter-spacing:.04em}
+td{padding:.3rem 0;font-size:.85rem;border-bottom:1px solid #f9fafb}
+tr:last-child td{border-bottom:none}
+.bw{background:#f3f4f6;border-radius:99px;height:7px;overflow:hidden;min-width:80px}
+.bf-g{height:100%;background:#22c55e;border-radius:99px}
+.bf-r{height:100%;background:#ef4444;border-radius:99px}
+.gn{color:#16a34a;font-weight:600}
+.rd{color:#dc2626;font-weight:600}
+.nut{text-align:right}
+.kg{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:.6rem 0}
+.ks{background:#f8f9fb;border:1px solid #e8eaed;border-radius:10px;padding:.65rem .5rem;text-align:center}
+.kn{font-size:1.5rem;font-weight:800;color:#2563eb}
+.kl{font-size:.68rem;color:#9ca3af;margin-top:.1rem}
+.kbw{height:6px;background:#e8eaed;border-radius:99px;margin:.65rem 0 .35rem;overflow:hidden}
+.kbf{height:100%;background:#2563eb;border-radius:99px}
+.ka{display:flex;justify-content:space-between;font-size:.68rem;color:#9ca3af}
+.ka .t{color:#2563eb;font-weight:600}
+</style></head><body>
+<nav>
+  <div class="logo">HR<span>Fidelity</span></div>
+  <a href="#">How it works</a><a href="#">Audit</a><a href="#">Fidelity</a>
+  <div class="nav-right"><div class="cert-badge">✓ CERTIFIED</div></div>
+</nav>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>AI Screener Bias Audit<br><span>Certified fair</span> — no proxy bias detected</h1>
+      <p>Three independent checks across 150 résumés and 450 counterfactual pairs. No demographic group disadvantaged.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">0.773</div><div class="hstat-l">Mean κ</div></div>
+      <div class="hstat"><div class="hstat-n">1.00</div><div class="hstat-l">Min 4/5 ratio</div></div>
+      <div class="hstat"><div class="hstat-n" style="color:#16a34a">0.000</div><div class="hstat-l">Max drift</div></div>
+    </div>
+  </div>
+</div>
+<div class="main">
+  <div>
+    <div class="card">
+      <div class="ct">Screener configuration</div>
+      <div class="ctrl"><label>Job requisition</label>
+        <select><option>Senior Backend Engineer</option></select></div>
+      <div class="ctrl"><label>Prestige bonus</label>
+        <div class="srow"><input type="range" value="0" min="0" max="50"><span class="sv">0.00</span></div></div>
+      <div class="ctrl"><label>Skills weight</label>
+        <div class="srow"><input type="range" value="60" min="30" max="90"><span class="sv">0.60</span></div></div>
+      <div class="ctrl"><label>Advance threshold</label>
+        <div class="srow"><input type="range" value="70" min="40" max="90"><span class="sv">0.70</span></div></div>
+      <div class="ctrl"><label>Name-based signals</label>
+        <div class="trow"><div class="tog"><input type="checkbox"><div class="tog-t"></div><div class="tog-th"></div></div>Off — names hidden</div></div>
+      <button class="btn">Run audit</button>
+    </div>
+  </div>
+  <div>
+    <div class="v-main">
+      <div>
+        <div class="v-title">Audit verdict</div>
+        <div class="v-val">✓ All checks passed</div>
+        <div class="v-sub">backend-eng · 150 résumés · 450 pairs</div>
+      </div>
+      <div class="v-badge"><div class="vdot"></div>CERTIFIED</div>
+    </div>
+    <div class="check-card">
+      <div class="ch"><h3>Four-fifths disparate impact</h3><span class="pass-pill">✓ Pass</span></div>
+      <div class="sub-t">Threshold: ratio ≥ 0.80 per group · EEOC / NYC LL 144</div>
+      <table>
+        <thead><tr><th>Group</th><th style="padding:0 .75rem">Rate bar</th><th class="nut">Sel. rate</th><th class="nut">Ratio</th></tr></thead>
+        <tbody>
+          <tr><td>race_proxy:white</td>
+            <td style="padding:0 .75rem"><div class="bw"><div class="bf-g" style="width:100%"></div></div></td>
+            <td class="nut">33.3%</td><td class="nut gn">1.00</td></tr>
+          <tr><td>race_proxy:black</td>
+            <td style="padding:0 .75rem"><div class="bw"><div class="bf-g" style="width:100%"></div></div></td>
+            <td class="nut">33.3%</td><td class="nut gn">1.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="check-card">
+      <div class="ch"><h3>Counterfactual drift</h3><span class="pass-pill">✓ Pass</span></div>
+      <div class="sub-t">Threshold: mean drift ≤ 0.05 per axis</div>
+      <table>
+        <thead><tr><th>Axis</th><th class="nut">Mean drift</th><th class="nut">Max drift</th><th class="nut">Flip rate</th><th class="nut">Pairs</th></tr></thead>
+        <tbody>
+          <tr><td>gender</td><td class="nut gn">0.0000</td><td class="nut">0.0000</td><td class="nut">0.0%</td><td class="nut">150</td></tr>
+          <tr><td>prestige_tier</td><td class="nut gn">0.0000</td><td class="nut">0.0000</td><td class="nut">0.0%</td><td class="nut">150</td></tr>
+          <tr><td>race_proxy</td><td class="nut gn">0.0000</td><td class="nut">0.0000</td><td class="nut">0.0%</td><td class="nut">150</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="check-card">
+      <div class="ch"><h3>Recruiter calibration (κ)</h3><span class="pass-pill">✓ Pass</span></div>
+      <div class="sub-t">Cohen's κ ≥ 0.60 threshold · 20 A/B pairs · 6 gold checks</div>
+      <div class="kg">
+        <div class="ks"><div class="kn">0.773</div><div class="kl">Mean κ</div></div>
+        <div class="ks"><div class="kn">0.636</div><div class="kl">Human-human κ</div></div>
+        <div class="ks"><div class="kn">100%</div><div class="kl">Gold accuracy</div></div>
+      </div>
+      <div class="kbw"><div class="kbf" style="width:88%"></div></div>
+      <div class="ka"><span>−1.0</span><span class="t">0.60 threshold</span><span>1.0</span></div>
+    </div>
+  </div>
+</div>
+</body></html>

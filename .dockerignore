@@ -1,0 +1,12 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.pyo
+tests/
+docs/
+scripts/
+data/resumes/
+data/counterfactual_pairs/
+data/manifest.json
+src/hrfidelity/server/static/designs/design-*.png

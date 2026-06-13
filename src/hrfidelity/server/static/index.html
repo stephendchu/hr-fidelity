@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Fidelity — AI Screener Bias Audit</title>
+<style>
+  :root {
+    --bg:      #111110;
+    --surface: #1c1c1a;
+    --border:  #2e2e2b;
+    --amber:   #d4a853;
+    --amber-d: #b8883a;
+    --text:    #e8e6e0;
+    --muted:   #7a7870;
+    --green:   #4caf7d;
+    --red:     #e05c5c;
+    --radius:  8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(17,17,16,.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 2rem;
+    height: 56px;
+  }
+  .logo { font-weight: 700; font-size: 1.1rem; color: var(--amber); letter-spacing: -0.02em; }
+  .logo span { color: var(--text); }
+  nav a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .15s; }
+  nav a:hover { color: var(--text); }
+
+  .hero {
+    max-width: 760px; margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+    text-align: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(212,168,83,.12);
+    color: var(--amber);
+    border: 1px solid rgba(212,168,83,.3);
+    border-radius: 99px;
+    padding: .25rem .9rem;
+    font-size: .8rem; font-weight: 600; letter-spacing: .04em;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+  }
+  h1 { font-size: 2.8rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 1.2rem; }
+  h1 em { color: var(--amber); font-style: normal; }
+  .hero p { color: var(--muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto 2rem; }
+
+  .story {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    max-width: 760px; margin: 0 auto 4rem;
+    font-size: .95rem;
+  }
+  .story p + p { margin-top: .7rem; }
+
+  .section { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .section-title {
+    font-size: 1.3rem; font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .6rem; margin-bottom: 1.5rem;
+  }
+  .section-title span { color: var(--amber); margin-right: .4rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+  .card + .card { margin-top: 1rem; }
+
+  .audit-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .audit-grid { grid-template-columns: 1fr; } }
+
+  .control-group { margin-bottom: 1.2rem; }
+  .control-group:last-child { margin-bottom: 0; }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: .45rem; }
+
+  select { width: 100%; }
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: .55rem .75rem;
+    font-size: .95rem;
+    cursor: pointer;
+  }
+  select:focus { outline: none; border-color: var(--amber); }
+
+  .slider-row { display: flex; align-items: center; gap: .75rem; }
+  .slider-val { min-width: 38px; text-align: right; font-size: .85rem; font-weight: 600; color: var(--amber); }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px; background: var(--border); border-radius: 99px; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    background: var(--amber);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+  }
+
+  .toggle-row { display: flex; align-items: center; gap: .75rem; cursor: pointer; }
+  .toggle { position: relative; width: 40px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: var(--border); border-radius: 99px;
+    transition: background .2s; cursor: pointer;
+  }
+  .toggle input:checked ~ .toggle-track { background: var(--amber); }
+  .toggle-thumb {
+    position: absolute;
+    width: 16px; height: 16px; top: 3px; left: 3px;
+    background: #fff; border-radius: 50%;
+    transition: transform .2s; pointer-events: none;
+  }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+  .run-btn {
+    width: 100%;
+    background: var(--amber); color: #111;
+    border: none; border-radius: 6px;
+    padding: .7rem 1rem;
+    font-size: .95rem; font-weight: 700;
+    cursor: pointer; margin-top: 1.25rem;
+    transition: background .15s, transform .1s;
+  }
+  .run-btn:hover { background: var(--amber-d); }
+  .run-btn:active { transform: scale(.98); }
+  .run-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .verdict-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .4rem 1rem;
+    border-radius: 99px;
+    font-size: .85rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .verdict-badge.certified { background: rgba(76,175,125,.15); color: var(--green); border: 1px solid rgba(76,175,125,.3); }
+  .verdict-badge.blocked   { background: rgba(224,92,92,.15);  color: var(--red);   border: 1px solid rgba(224,92,92,.3); }
+  .verdict-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: .78rem; font-weight: 600; color: var(--muted); padding-bottom: .4rem; }
+  td { padding: .35rem 0; font-size: .88rem; vertical-align: middle; }
+
+  .bar-wrap { background: var(--bg); border-radius: 99px; height: 8px; min-width: 60px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+  .bar-fill.pass { background: var(--green); }
+  .bar-fill.fail { background: var(--red); }
+
+  .drift-tbl td { border-bottom: 1px solid rgba(255,255,255,.04); }
+  .drift-tbl tr:last-child td { border-bottom: none; }
+  .drift-tbl th { border-bottom: 1px solid var(--border); }
+  .drift-tbl td:not(:first-child) { text-align: right; }
+
+  .kappa-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: .75rem; }
+  .kappa-stat { text-align: center; }
+  .kappa-num { font-size: 2rem; font-weight: 800; color: var(--amber); }
+  .kappa-lbl { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+  .kappa-bar-wrap { height: 10px; background: var(--bg); border-radius: 99px; margin: 1rem 0 .5rem; overflow: hidden; }
+  .kappa-bar-fill { height: 100%; border-radius: 99px; background: var(--amber); transition: width .7s ease; }
+  .kappa-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
+  .threshold-label { color: var(--amber); font-size: .72rem; font-weight: 600; }
+
+  .explainer { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+  @media (max-width: 700px) { .explainer { grid-template-columns: 1fr; } }
+  .explainer-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
+  .explainer-icon { font-size: 1.4rem; margin-bottom: .6rem; }
+  .explainer-item h3 { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+  .explainer-item p { font-size: .82rem; color: var(--muted); }
+
+  .disclosure {
+    background: rgba(212,168,83,.06);
+    border: 1px solid rgba(212,168,83,.2);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: .83rem; color: var(--muted);
+    display: flex; gap: .75rem; align-items: flex-start;
+    max-width: 1100px; margin: 0 auto 2rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem; text-align: center;
+    font-size: .8rem; color: var(--muted);
+  }
+
+  .placeholder { padding: 3rem 2rem; text-align: center; color: var(--muted); }
+  .spinner {
+    display: block; width: 24px; height: 24px;
+    border: 3px solid var(--border); border-top-color: var(--amber);
+    border-radius: 50%; animation: spin .7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn .35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+  .row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .9rem; }
+  .row-header h3 { font-size: 1rem; font-weight: 700; }
+  .pass-label { font-size: .85rem; font-weight: 700; color: var(--green); }
+  .fail-label { font-size: .85rem; font-weight: 700; color: var(--red); }
+  .sub { font-size: .78rem; color: var(--muted); margin-bottom: .5rem; }
+  .meta-row { display: flex; gap: 2rem; margin-top: 1rem; font-size: .82rem; color: var(--muted); }
+  .meta-row strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">HR<span>Fidelity</span></div>
+  <a href="#how-it-works">How it works</a>
+  <a href="#audit">Audit</a>
+  <a href="#fidelity">Fidelity</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">AI Resume Screening Audit</div>
+  <h1>Does your AI screener<br>pick resumes <em>fairly</em>?</h1>
+  <p>HR Fidelity runs three independent checks — disparate impact, counterfactual drift, and recruiter-AI agreement — to certify or block your screener before it touches a single live application.</p>
+</div>
+
+<div class="story">
+  <p><strong style="color:var(--amber)">Why this matters:</strong> In 2018 Amazon discovered its ML hiring tool had learned to penalize résumés containing the word "women's" and downgraded graduates of all-women's colleges. The system was trained on ten years of hiring data — data that reflected a historically male engineering workforce. It was shut down before deployment, but the pattern repeats industry-wide.</p>
+  <p>HR Fidelity audits screeners <em>before</em> data like that can take hold. Every metric is computed on <strong>synthetic, public-domain data</strong> — no real candidates, no employer artifacts.</p>
+</div>
+
+<section class="section" id="how-it-works">
+  <div class="section-title"><span>01</span> How it works</div>
+  <div class="explainer">
+    <div class="explainer-item">
+      <div class="explainer-icon">⚖️</div>
+      <h3>Four-fifths disparate impact</h3>
+      <p>EEOC / NYC Local Law 144 standard: any demographic group selected at less than 80 % of the top group's rate triggers a violation.</p>
+    </div>
+    <div class="explainer-item">
+      <div class="explainer-icon">🔀</div>
+      <h3>Counterfactual drift</h3>
+      <p>Each résumé is paired with an identical twin where only one proxy signal changes (name, institution tier). Mean score drift &gt; 5 % blocks certification.</p>
+    </div>
+    <div class="explainer-item">
+      <div class="explainer-icon">📏</div>
+      <h3>Recruiter–AI agreement (κ)</h3>
+      <p>Cohen's κ measures whether the AI and human recruiters agree on A/B pairs. κ ≥ 0.60 ("substantial") is required to pass fidelity calibration.</p>
+    </div>
+  </div>
+</section>
+
+<div class="disclosure">
+  <span style="font-size:1.1rem;flex-shrink:0;">🔒</span>
+  <div>
+    <strong>Data disclosure</strong> — All résumés are 100 % synthetic. Names are sampled from SSA/Census/Bertrand-Mullainathan public datasets.
+    No real candidate data, no employer hiring records. Every metric is recomputable from the open-source corpus generator.
+  </div>
+</div>
+
+<section class="section" id="audit">
+  <div class="section-title"><span>02</span> Live bias audit</div>
+  <div class="audit-grid">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:1.2rem;">Screener configuration</div>
+
+      <div class="control-group">
+        <label for="req-select">Job requisition</label>
+        <select id="req-select"></select>
+      </div>
+
+      <div class="control-group">
+        <label for="prestige-bonus">Prestige bonus <small style="color:var(--muted);font-weight:400;">(elite school weight)</small></label>
+        <div class="slider-row">
+          <input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0">
+          <span class="slider-val" id="prestige-bonus-val">0.00</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="skills-weight">Skills weight</label>
+        <div class="slider-row">
+          <input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6">
+          <span class="slider-val" id="skills-weight-val">0.60</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="advance-threshold">Advance threshold</label>
+        <div class="slider-row">
+          <input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7">
+          <span class="slider-val" id="advance-threshold-val">0.70</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Name-based signals</label>
+        <label class="toggle-row" style="font-weight:400;color:var(--text);font-size:.9rem;cursor:pointer;">
+          <div class="toggle">
+            <input type="checkbox" id="name-signal">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </div>
+          <span id="name-signal-label">Off — screener cannot see names</span>
+        </label>
+        <div id="name-signal-hint" style="font-size:.78rem;color:var(--muted);margin-top:.5rem;">
+          Turning this on simulates a screener that implicitly uses race/gender proxies from applicant names.
+        </div>
+      </div>
+
+      <button class="run-btn" id="run-audit-btn" onclick="runAudit()">Run audit</button>
+    </div>
+
+    <div id="audit-results-panel">
+      <div class="card placeholder">
+        Configure your screener and click <strong>Run audit</strong> to see results.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fidelity">
+  <div class="section-title"><span>03</span> Recruiter calibration (fidelity)</div>
+  <div id="fidelity-panel">
+    <div class="card placeholder">Fidelity loads after you run an audit.</div>
+  </div>
+</section>
+
+<footer>
+  Built with synthetic data only &mdash; no real candidates. &nbsp;&middot;&nbsp; HR Fidelity v0.1
+</footer>
+
+<script>
+// ── XSS guard: escape all values before DOM insertion ─────────────────────
+function esc(v) {
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── Req loader ────────────────────────────────────────────────────────────
+async function loadReqs() {
+  const res = await fetch('/api/reqs');
+  const reqs = await res.json();
+  const sel = document.getElementById('req-select');
+  sel.textContent = '';  // clear
+  reqs.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = r.title;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Slider wiring ─────────────────────────────────────────────────────────
+function wireSlider(id, fmt) {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(id + '-val');
+  el.addEventListener('input', () => { valEl.textContent = fmt(parseFloat(el.value)); });
+}
+wireSlider('prestige-bonus',    v => v.toFixed(2));
+wireSlider('skills-weight',     v => v.toFixed(2));
+wireSlider('advance-threshold', v => v.toFixed(2));
+
+document.getElementById('name-signal').addEventListener('change', e => {
+  const on = e.target.checked;
+  document.getElementById('name-signal-label').textContent =
+    on ? 'On — race/gender proxies active' : 'Off — screener cannot see names';
+  document.getElementById('name-signal-hint').style.color =
+    on ? 'var(--red)' : 'var(--muted)';
+});
+
+// ── Run audit ─────────────────────────────────────────────────────────────
+async function runAudit() {
+  const reqId = document.getElementById('req-select').value;
+  const config = {
+    prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
+    name_signal:           document.getElementById('name-signal').checked,
+    required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
+    threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
+  };
+
+  const btn = document.getElementById('run-audit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  setLoading('audit-results-panel');
+  setLoading('fidelity-panel');
+
+  try {
+    const [auditRes, fidRes] = await Promise.all([
+      fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ req_id: reqId, config }),
+      }),
+      fetch('/api/fidelity/' + encodeURIComponent(reqId)),
+    ]);
+
+    if (!auditRes.ok) throw new Error('Audit API error ' + auditRes.status);
+    if (!fidRes.ok)   throw new Error('Fidelity API error ' + fidRes.status);
+
+    const audit    = await auditRes.json();
+    const fidelity = await fidRes.json();
+
+    renderAudit(audit);
+    renderFidelity(fidelity);
+  } catch(e) {
+    setError('audit-results-panel', e.message);
+    setError('fidelity-panel', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run audit';
+  }
+}
+
+// ── Loading / error states ─────────────────────────────────────────────────
+function setLoading(id) {
+  const el = document.getElementById(id);
+  el.textContent = '';
+  const wrap = el.appendChild(document.createElement('div'));
+  wrap.className = 'card placeholder';
+  const spin = wrap.appendChild(document.createElement('div'));
+  spin.className = 'spinner';
+  const msg = wrap.appendChild(document.createElement('div'));
+  msg.textContent = 'Computing…';
+}
+
+function setError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '';
+  const wrap = el.appendChild(document.createElement('div'));
+  wrap.className = 'card placeholder';
+  wrap.style.color = 'var(--red)';
+  wrap.textContent = 'Error: ' + msg;
+}
+
+// ── Render audit ──────────────────────────────────────────────────────────
+function renderAudit(data) {
+  const panel = document.getElementById('audit-results-panel');
+  panel.textContent = '';
+  panel.className = 'fade-in';
+
+  const pass = data.verdict === 'CERTIFIED';
+  const container = panel.appendChild(document.createElement('div'));
+
+  // Verdict card
+  const verdictCard = appendCard(container);
+  const vh = appendRow(verdictCard, 'Verdict');
+  const badge = vh.appendChild(document.createElement('div'));
+  badge.className = 'verdict-badge ' + (pass ? 'certified' : 'blocked');
+  const dot = badge.appendChild(document.createElement('div'));
+  dot.className = 'verdict-dot';
+  badge.appendChild(document.createTextNode(data.verdict));
+
+  const detail = verdictCard.appendChild(document.createElement('div'));
+  detail.className = 'sub';
+  detail.style.marginTop = '.4rem';
+  detail.textContent = data.detail;
+
+  const meta = verdictCard.appendChild(document.createElement('div'));
+  meta.className = 'meta-row';
+  meta.innerHTML = 'Résumés: <strong>' + esc(data.n_resumes) + '</strong>'
+    + '&nbsp;&nbsp;Pairs: <strong>' + esc(data.n_pairs) + '</strong>';
+
+  // Four-fifths card
+  const ffCard = appendCard(container);
+  ffCard.style.marginTop = '1rem';
+  const ffRow = appendRow(ffCard, 'Four-fifths disparate impact');
+  appendPassFail(ffRow, data.four_fifths.passed);
+
+  const ffSub = ffCard.appendChild(document.createElement('div'));
+  ffSub.className = 'sub';
+  ffSub.textContent = 'Threshold: ratio ≥ 0.80 per group';
+
+  const ffTable = ffCard.appendChild(document.createElement('table'));
+  const thead = ffTable.appendChild(document.createElement('thead'));
+  appendTH(thead, ['Group', 'Rate', 'Ratio', '']);
+
+  const tbody = ffTable.appendChild(document.createElement('tbody'));
+  const ratios = data.four_fifths.ratios;
+  if (Object.keys(ratios).length === 0) {
+    const tr = tbody.appendChild(document.createElement('tr'));
+    const td = tr.appendChild(document.createElement('td'));
+    td.colSpan = 4;
+    td.textContent = 'No groups computed';
+    td.style.color = 'var(--muted)';
+  } else {
+    Object.entries(ratios).forEach(([key, ratio]) => {
+      const ok = ratio >= 0.8;
+      const tr = tbody.appendChild(document.createElement('tr'));
+      appendTD(tr, key).style.color = 'var(--muted)';
+      const barTD = tr.appendChild(document.createElement('td'));
+      barTD.style.padding = '0 1rem';
+      const wrap = barTD.appendChild(document.createElement('div'));
+      wrap.className = 'bar-wrap';
+      const fill = wrap.appendChild(document.createElement('div'));
+      fill.className = 'bar-fill ' + (ok ? 'pass' : 'fail');
+      fill.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
+      const valTD = appendTD(tr, ratio.toFixed(2));
+      valTD.style.textAlign = 'right';
+      valTD.style.fontWeight = '600';
+      valTD.style.color = ok ? 'var(--green)' : 'var(--red)';
+      const flagTD = appendTD(tr, ok ? '✓' : '< 0.80 ✗');
+      flagTD.style.fontSize = '.75rem';
+      flagTD.style.color = ok ? 'var(--green)' : 'var(--red)';
+    });
+  }
+
+  // Drift card
+  const drCard = appendCard(container);
+  drCard.style.marginTop = '1rem';
+  const drRow = appendRow(drCard, 'Counterfactual drift');
+  appendPassFail(drRow, data.drift.passed);
+
+  const drSub = drCard.appendChild(document.createElement('div'));
+  drSub.className = 'sub';
+  drSub.textContent = 'Threshold: mean drift ≤ ' + data.drift.drift_threshold;
+
+  const drTable = drCard.appendChild(document.createElement('table'));
+  drTable.className = 'drift-tbl';
+  const drThead = drTable.appendChild(document.createElement('thead'));
+  appendTH(drThead, ['Axis', 'Mean drift', 'Max drift', 'Flip rate', 'Pairs']);
+  const drTbody = drTable.appendChild(document.createElement('tbody'));
+  const axisResults = data.drift.axis_results;
+  if (Object.keys(axisResults).length === 0) {
+    const tr = drTbody.appendChild(document.createElement('tr'));
+    const td = tr.appendChild(document.createElement('td'));
+    td.colSpan = 5; td.textContent = 'No drift data'; td.style.color = 'var(--muted)';
+  } else {
+    Object.entries(axisResults).forEach(([axis, r]) => {
+      const ok = r.mean_drift <= data.drift.drift_threshold;
+      const tr = drTbody.appendChild(document.createElement('tr'));
+      appendTD(tr, axis);
+      const mdTD = appendTD(tr, r.mean_drift.toFixed(4));
+      mdTD.style.textAlign = 'right';
+      mdTD.style.color = ok ? 'var(--green)' : 'var(--red)';
+      appendTDRight(tr, r.max_drift.toFixed(4));
+      appendTDRight(tr, (r.flip_rate * 100).toFixed(1) + '%');
+      appendTDRight(tr, String(r.n_pairs));
+    });
+  }
+}
+
+// ── Render fidelity ───────────────────────────────────────────────────────
+function renderFidelity(data) {
+  const panel = document.getElementById('fidelity-panel');
+  panel.textContent = '';
+  panel.className = 'fade-in';
+
+  const kappaPct = Math.max(0, Math.min(100, (data.mean_kappa_ai_human + 1) / 2 * 100));
+  const kappaOk  = data.mean_kappa_ai_human >= 0.60;
+
+  // κ card
+  const kappaCard = appendCard(panel);
+  const kh = appendRow(kappaCard, 'AI–Recruiter Agreement (κ)');
+  appendPassFail(kh, data.passes);
+
+  const kg = kappaCard.appendChild(document.createElement('div'));
+  kg.className = 'kappa-grid';
+  addKappaStat(kg, data.mean_kappa_ai_human.toFixed(3), 'Mean κ (AI vs recruiter)');
+  addKappaStat(kg, data.kappa_human_human.toFixed(3),   'κ human-human baseline');
+  addKappaStat(kg, (data.gold_pass_rate * 100).toFixed(0) + '%', 'Gold pair accuracy');
+
+  const barWrap = kappaCard.appendChild(document.createElement('div'));
+  barWrap.className = 'kappa-bar-wrap';
+  const barFill = barWrap.appendChild(document.createElement('div'));
+  barFill.className = 'kappa-bar-fill';
+  barFill.style.width = kappaPct.toFixed(1) + '%';
+
+  const axis = kappaCard.appendChild(document.createElement('div'));
+  axis.className = 'kappa-axis';
+  setText(axis.appendChild(document.createElement('span')), '−1 (inverse)');
+  const thr = axis.appendChild(document.createElement('span'));
+  thr.className = 'threshold-label';
+  thr.textContent = '0.60 threshold';
+  setText(axis.appendChild(document.createElement('span')), '1.0 (perfect)');
+
+  // Per-judge breakdown card
+  const judgeCard = appendCard(panel);
+  judgeCard.style.marginTop = '1rem';
+  const jh = judgeCard.appendChild(document.createElement('div'));
+  jh.style.cssText = 'font-weight:700;margin-bottom:.75rem;font-size:.95rem;';
+  jh.textContent = 'Per-judge breakdown';
+  const jsub = judgeCard.appendChild(document.createElement('div'));
+  jsub.className = 'sub';
+  jsub.textContent = data.n_pairs + ' pairs · ' + data.n_gold + ' gold attention checks';
+
+  const jTable = judgeCard.appendChild(document.createElement('table'));
+  jTable.className = 'drift-tbl';
+  const jThead = jTable.appendChild(document.createElement('thead'));
+  appendTH(jThead, ['Judge', 'κ', 'Observed agree.', 'Pairs']);
+  const jTbody = jTable.appendChild(document.createElement('tbody'));
+  data.kappa_ai_human.forEach(k => {
+    const tr = jTbody.appendChild(document.createElement('tr'));
+    appendTD(tr, k.judge_b);
+    appendTDRight(tr, k.kappa.toFixed(3));
+    appendTDRight(tr, (k.observed_agreement * 100).toFixed(1) + '%');
+    appendTDRight(tr, String(k.n_pairs));
+  });
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────
+function appendCard(parent) {
+  const d = parent.appendChild(document.createElement('div'));
+  d.className = 'card';
+  return d;
+}
+function appendRow(parent, title) {
+  const d = parent.appendChild(document.createElement('div'));
+  d.className = 'row-header';
+  const h3 = d.appendChild(document.createElement('h3'));
+  h3.textContent = title;
+  return d;
+}
+function appendPassFail(parent, passed) {
+  const s = parent.appendChild(document.createElement('span'));
+  s.className = passed ? 'pass-label' : 'fail-label';
+  s.textContent = passed ? '✓ PASS' : '✗ FAIL';
+}
+function appendTH(thead, cols) {
+  const tr = thead.appendChild(document.createElement('tr'));
+  cols.forEach(c => { const th = tr.appendChild(document.createElement('th')); th.textContent = c; });
+}
+function appendTD(tr, text) {
+  const td = tr.appendChild(document.createElement('td'));
+  td.textContent = text;
+  return td;
+}
+function appendTDRight(tr, text) {
+  const td = appendTD(tr, text);
+  td.style.textAlign = 'right';
+  return td;
+}
+function addKappaStat(parent, num, label) {
+  const div = parent.appendChild(document.createElement('div'));
+  div.className = 'kappa-stat';
+  const n = div.appendChild(document.createElement('div'));
+  n.className = 'kappa-num'; n.textContent = num;
+  const l = div.appendChild(document.createElement('div'));
+  l.className = 'kappa-lbl'; l.textContent = label;
+}
+function setText(el, text) { el.textContent = text; return el; }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+loadReqs();
+</script>
+</body>
+</html>

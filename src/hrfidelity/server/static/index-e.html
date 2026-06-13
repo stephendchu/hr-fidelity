@@ -1,0 +1,325 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HR Fidelity — AI Screener Bias Audit</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f8f9fb;color:#1a1d23;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+nav{background:#fff;border-bottom:1px solid #e8eaed;padding:0 2rem;display:flex;align-items:center;gap:2.5rem;height:56px;position:sticky;top:0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.logo{font-weight:800;font-size:1rem;color:#1a1d23;letter-spacing:-.02em}
+.logo span{color:#2563eb}
+nav a{color:#6b7280;text-decoration:none;font-size:.85rem}
+nav a:hover{color:#1a1d23}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.cert-badge{border-radius:99px;padding:.2rem .75rem;font-size:.75rem;font-weight:700;letter-spacing:.04em}
+.cert-badge.certified{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0}
+.cert-badge.blocked{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.hero{background:#fff;border-bottom:1px solid #e8eaed;padding:2.5rem 2rem}
+.hero-inner{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center}
+.hero-text h1{font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.5rem}
+.hero-text h1 span{color:#2563eb}
+.hero-text p{color:#6b7280;font-size:.9rem;max-width:500px}
+.hero-stats{display:flex;gap:1.5rem;flex-shrink:0}
+.hstat{text-align:center;padding:1rem 1.5rem;background:#f8f9fb;border:1px solid #e8eaed;border-radius:12px}
+.hstat-n{font-size:1.5rem;font-weight:800;color:#2563eb}
+.hstat-l{font-size:.72rem;color:#6b7280;margin-top:.2rem}
+.main{max-width:1080px;margin:1.5rem auto;padding:0 2rem 3rem;display:grid;grid-template-columns:280px 1fr;gap:1.5rem;align-items:start}
+.card{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card+.card{margin-top:1rem}
+.ct{font-weight:700;font-size:.9rem;color:#1a1d23;margin-bottom:.9rem}
+.ctrl{margin-bottom:.9rem}
+.ctrl label{display:block;font-size:.75rem;font-weight:600;color:#6b7280;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em}
+select{width:100%;background:#f8f9fb;border:1px solid #e8eaed;border-radius:8px;color:#1a1d23;padding:.45rem .65rem;font-size:.88rem}
+select:focus{outline:none;border-color:#2563eb;background:#fff}
+.srow{display:flex;align-items:center;gap:.6rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:#e8eaed;border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:#2563eb;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #2563eb}
+.sv{min-width:34px;text-align:right;font-size:.82rem;font-weight:700;color:#2563eb}
+.trow{display:flex;align-items:center;gap:.6rem;font-size:.88rem;color:#374151;cursor:pointer}
+.tog{position:relative;width:38px;height:21px}
+.tog input{opacity:0;width:0;height:0}
+.tog-t{position:absolute;inset:0;background:#e8eaed;border-radius:99px;transition:background .2s}
+.tog input:checked~.tog-t{background:#2563eb}
+.tog-th{position:absolute;width:15px;height:15px;top:3px;left:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);pointer-events:none}
+.tog input:checked~.tog-th{transform:translateX(17px)}
+.run-btn{width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:.65rem 1rem;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:.9rem;transition:background .15s}
+.run-btn:hover{background:#1d4ed8}
+.run-btn:disabled{opacity:.5;cursor:not-allowed}
+/* Verdict banner */
+.v-banner{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:1rem}
+.v-banner.blocked{background:#fef2f2;border-color:#fecaca}
+.v-label{font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem}
+.v-main{font-size:1.1rem;font-weight:800;color:#16a34a}
+.v-main.blocked{color:#dc2626}
+.v-sub{font-size:.8rem;color:#6b7280;margin-top:.15rem}
+.v-badge{display:inline-flex;align-items:center;gap:.35rem;background:#16a34a;color:#fff;border-radius:99px;padding:.35rem .9rem;font-size:.8rem;font-weight:700;letter-spacing:.04em}
+.v-badge.blocked{background:#dc2626}
+.vd{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.7)}
+/* Check cards */
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.ch h3{font-size:.9rem;font-weight:700;color:#1a1d23}
+.pass-pill{background:#dcfce7;color:#16a34a;border-radius:99px;padding:.18rem .7rem;font-size:.74rem;font-weight:700}
+.fail-pill{background:#fee2e2;color:#dc2626;border-radius:99px;padding:.18rem .7rem;font-size:.74rem;font-weight:700}
+.sub-t{font-size:.76rem;color:#9ca3af;margin-bottom:.5rem}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.72rem;font-weight:600;color:#9ca3af;padding-bottom:.3rem;border-bottom:1px solid #f3f4f6;text-transform:uppercase;letter-spacing:.04em}
+td{padding:.3rem 0;font-size:.85rem;border-bottom:1px solid #f9fafb}
+tr:last-child td{border-bottom:none}
+.bw{background:#f3f4f6;border-radius:99px;height:7px;overflow:hidden;min-width:80px}
+.bf{height:100%;background:#22c55e;border-radius:99px}
+.bf.fail{background:#ef4444}
+.gn{color:#16a34a;font-weight:600}
+.rd{color:#dc2626;font-weight:600}
+.nut{text-align:right}
+.kg{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:.6rem 0}
+.ks{background:#f8f9fb;border:1px solid #e8eaed;border-radius:10px;padding:.65rem .5rem;text-align:center}
+.kn{font-size:1.5rem;font-weight:800;color:#2563eb}
+.kl{font-size:.68rem;color:#9ca3af;margin-top:.1rem}
+.kbw{height:6px;background:#e8eaed;border-radius:99px;margin:.65rem 0 .35rem;overflow:hidden}
+.kbf{height:100%;background:#2563eb;border-radius:99px}
+.ka{display:flex;justify-content:space-between;font-size:.68rem;color:#9ca3af}
+.ka .t{color:#2563eb;font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style></head><body>
+
+<nav>
+  <div class="logo">HR<span>Fidelity</span></div>
+  <a href="#">How it works</a><a href="#">Audit</a><a href="#">Fidelity</a>
+  <div class="nav-right"><div class="cert-badge" id="nav-badge" style="display:none"></div></div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>AI Screener Bias Audit<br><span>Certify before a single hire</span></h1>
+      <p>Three independent checks — disparate impact, counterfactual drift, and recruiter–AI agreement — certify or block your screener. Every metric is reproducible and audit-ready.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n" id="h-kappa">—</div><div class="hstat-l">Mean κ</div></div>
+      <div class="hstat"><div class="hstat-n" id="h-ratio">—</div><div class="hstat-l">Min 4/5 ratio</div></div>
+      <div class="hstat"><div class="hstat-n" id="h-drift">—</div><div class="hstat-l">Max drift</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div>
+    <div class="card">
+      <div class="ct">Screener configuration</div>
+      <div class="ctrl">
+        <label for="req-select">Job requisition</label>
+        <select id="req-select"></select>
+      </div>
+      <div class="ctrl">
+        <label for="prestige-bonus">Prestige bonus</label>
+        <div class="srow"><input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0"><span class="sv" id="prestige-bonus-val">0.00</span></div>
+      </div>
+      <div class="ctrl">
+        <label for="skills-weight">Skills weight</label>
+        <div class="srow"><input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
+      </div>
+      <div class="ctrl">
+        <label for="advance-threshold">Advance threshold</label>
+        <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
+      </div>
+      <div class="ctrl">
+        <label>Name-based signals</label>
+        <label class="trow">
+          <div class="tog"><input type="checkbox" id="name-signal"><div class="tog-t"></div><div class="tog-th"></div></div>
+          <span id="name-signal-label">Off — screener cannot see names</span>
+        </label>
+        <div id="name-signal-hint" style="font-size:.75rem;color:#9ca3af;margin-top:.4rem">Simulates a screener using race/gender proxies from applicant names.</div>
+      </div>
+      <button class="run-btn" id="run-btn" onclick="runAudit()">Run audit</button>
+    </div>
+  </div>
+  <div id="results-panel">
+    <div class="card" style="padding:3rem;text-align:center;color:#9ca3af">Configure your screener and click <strong style="color:#1a1d23">Run audit</strong> to see results.</div>
+  </div>
+</div>
+
+<script>
+function wireSlider(id, fmt) {
+  const el = document.getElementById(id), vEl = document.getElementById(id+'-val');
+  if (el && vEl) el.addEventListener('input', () => vEl.textContent = fmt(parseFloat(el.value)));
+}
+wireSlider('prestige-bonus',    v => v.toFixed(2));
+wireSlider('skills-weight',     v => v.toFixed(2));
+wireSlider('advance-threshold', v => v.toFixed(2));
+document.getElementById('name-signal').addEventListener('change', e => {
+  const on = e.target.checked;
+  document.getElementById('name-signal-label').textContent = on ? 'On — race/gender proxies active' : 'Off — screener cannot see names';
+  document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
+});
+
+async function loadReqs() {
+  try {
+    const reqs = await fetch('/api/reqs').then(r => r.json());
+    const sel  = document.getElementById('req-select');
+    sel.textContent = '';
+    reqs.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.id; o.textContent = r.title; sel.appendChild(o);
+    });
+  } catch (_) {
+    const sel = document.getElementById('req-select');
+    sel.textContent = '';
+    const o = document.createElement('option');
+    o.textContent = 'Server not running'; sel.appendChild(o);
+  }
+}
+
+async function runAudit() {
+  const reqId  = document.getElementById('req-select').value;
+  const config = {
+    prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
+    name_signal:           document.getElementById('name-signal').checked,
+    required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
+    threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
+  };
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = 'Computing…';
+
+  const panel = document.getElementById('results-panel');
+  panel.textContent = '';
+  const ph  = panel.appendChild(document.createElement('div'));
+  ph.className = 'card';
+  ph.style.cssText = 'text-align:center;padding:3rem';
+  const sp = ph.appendChild(document.createElement('div'));
+  sp.style.cssText = 'display:inline-block;width:24px;height:24px;border:3px solid #e8eaed;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.75rem';
+  ph.appendChild(document.createTextNode('Running audit…'));
+
+  try {
+    const [ar, fr] = await Promise.all([
+      fetch('/api/audit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({req_id:reqId,config}) }),
+      fetch('/api/fidelity/' + encodeURIComponent(reqId)),
+    ]);
+    if (!ar.ok) throw new Error('Audit ' + ar.status);
+    if (!fr.ok) throw new Error('Fidelity ' + fr.status);
+    renderResults(panel, await ar.json(), await fr.json());
+  } catch(e) {
+    panel.textContent = '';
+    const err = panel.appendChild(document.createElement('div'));
+    err.className = 'card';
+    err.style.cssText = 'padding:2rem;color:#dc2626;text-align:center';
+    err.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run audit';
+  }
+}
+
+function renderResults(panel, audit, fidelity) {
+  panel.textContent = '';
+  const pass = audit.verdict === 'CERTIFIED';
+
+  // Update hero stats and nav badge
+  const hk = document.getElementById('h-kappa');
+  const hr = document.getElementById('h-ratio');
+  const hd = document.getElementById('h-drift');
+  const nb = document.getElementById('nav-badge');
+  if (hk) hk.textContent = fidelity.mean_kappa_ai_human.toFixed(3);
+  if (hr) {
+    const ratios = Object.values(audit.four_fifths.ratios);
+    hr.textContent = ratios.length ? Math.min(...ratios).toFixed(2) : '—';
+  }
+  if (hd) {
+    const drifts = Object.values(audit.drift.axis_results).map(r => r.max_drift);
+    hd.textContent = drifts.length ? Math.max(...drifts).toFixed(3) : '—';
+    hd.style.color = pass ? '#16a34a' : '#dc2626';
+  }
+  if (nb) {
+    nb.style.display = '';
+    nb.className = 'cert-badge ' + (pass ? 'certified' : 'blocked');
+    nb.textContent = pass ? '✓ CERTIFIED' : '✗ BLOCKED';
+  }
+
+  // Verdict banner
+  const vb = panel.appendChild(document.createElement('div'));
+  vb.className = 'v-banner' + (pass ? '' : ' blocked');
+  const vl = vb.appendChild(document.createElement('div'));
+  const lbl = vl.appendChild(document.createElement('div')); lbl.className = 'v-label'; lbl.textContent = 'Audit verdict';
+  const vm  = vl.appendChild(document.createElement('div')); vm.className  = 'v-main' + (pass ? '' : ' blocked'); vm.textContent = pass ? '✓ All checks passed' : '✗ Blocked — bias detected';
+  const vs  = vl.appendChild(document.createElement('div')); vs.className  = 'v-sub';  vs.textContent = audit.n_resumes + ' résumés · ' + audit.n_pairs + ' pairs';
+  const badge = vb.appendChild(document.createElement('div')); badge.className = 'v-badge' + (pass ? '' : ' blocked');
+  const dot = badge.appendChild(document.createElement('div')); dot.className = 'vd';
+  badge.appendChild(document.createTextNode(pass ? 'CERTIFIED' : 'BLOCKED'));
+
+  // Four-fifths
+  const ffCard = mkCard(panel);
+  const ffh = mkCh(ffCard, 'Four-fifths disparate impact'); mkPill(ffh, audit.four_fifths.passed);
+  mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144');
+  const fft = mkTable(ffCard, ['Group','Rate bar','Sel. rate','Ratio']);
+  Object.entries(audit.four_fifths.ratios).forEach(([key, ratio]) => {
+    const ok = ratio >= 0.8;
+    const tr = fft.appendChild(document.createElement('tr'));
+    mkTD(tr, key).style.color = '#6b7280';
+    const btd = tr.appendChild(document.createElement('td')); btd.style.padding = '0 1rem';
+    const bw = btd.appendChild(document.createElement('div')); bw.className = 'bw';
+    const bf = bw.appendChild(document.createElement('div')); bf.className = 'bf' + (ok ? '' : ' fail');
+    bf.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
+    const grp = audit.four_fifths.groups.find(g => key.includes(g.group));
+    mkTD(tr, grp ? (grp.selection_rate * 100).toFixed(1) + '%' : '—').className = 'nut';
+    mkTD(tr, ratio.toFixed(2)).className = 'nut ' + (ok ? 'gn' : 'rd');
+  });
+
+  // Drift
+  const drCard = mkCard(panel);
+  const drh = mkCh(drCard, 'Counterfactual drift'); mkPill(drh, audit.drift.passed);
+  mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
+  const drt = mkTable(drCard, ['Axis','Mean drift','Max drift','Flip rate','Pairs']);
+  Object.entries(audit.drift.axis_results).forEach(([axis, r]) => {
+    const ok = r.mean_drift <= audit.drift.drift_threshold;
+    const tr = drt.appendChild(document.createElement('tr'));
+    mkTD(tr, axis);
+    mkTD(tr, r.mean_drift.toFixed(4)).className = 'nut ' + (ok ? 'gn' : 'rd');
+    mkTD(tr, r.max_drift.toFixed(4)).className  = 'nut';
+    mkTD(tr, (r.flip_rate*100).toFixed(1)+'%').className = 'nut';
+    mkTD(tr, String(r.n_pairs)).className = 'nut';
+  });
+
+  // Fidelity
+  const fidCard = mkCard(panel);
+  const fidh = mkCh(fidCard, 'Recruiter calibration (κ)'); mkPill(fidh, fidelity.passes);
+  mkSub(fidCard, fidelity.n_pairs + ' A/B pairs · ' + fidelity.n_gold + ' gold checks · κ ≥ 0.60 threshold');
+  const kg = fidCard.appendChild(document.createElement('div')); kg.className = 'kg';
+  addKStat(kg, fidelity.mean_kappa_ai_human.toFixed(3), 'Mean κ');
+  addKStat(kg, fidelity.kappa_human_human.toFixed(3),   'Human-human κ');
+  addKStat(kg, (fidelity.gold_pass_rate*100).toFixed(0)+'%', 'Gold accuracy');
+  const kbw = fidCard.appendChild(document.createElement('div')); kbw.className = 'kbw';
+  const kbf = kbw.appendChild(document.createElement('div'));     kbf.className = 'kbf';
+  kbf.style.width = Math.max(0,Math.min(100,(fidelity.mean_kappa_ai_human+1)/2*100)).toFixed(1) + '%';
+  const ka = fidCard.appendChild(document.createElement('div')); ka.className = 'ka';
+  const s1 = ka.appendChild(document.createElement('span')); s1.textContent = '−1.0';
+  const s2 = ka.appendChild(document.createElement('span')); s2.className = 't'; s2.textContent = '0.60 threshold';
+  const s3 = ka.appendChild(document.createElement('span')); s3.textContent = '1.0';
+}
+
+function mkCard(p) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'card'; d.style.marginTop = '1rem'; return d;
+}
+function mkCh(p, title) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'ch';
+  const h = d.appendChild(document.createElement('h3')); h.textContent = title; return d;
+}
+function mkPill(p, passed) {
+  const s = p.appendChild(document.createElement('span')); s.className = passed ? 'pass-pill' : 'fail-pill';
+  s.textContent = passed ? '✓ Pass' : '✗ Fail';
+}
+function mkSub(p, text) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'sub-t'; d.textContent = text;
+}
+function mkTable(p, cols) {
+  const t = p.appendChild(document.createElement('table'));
+  const thead = t.appendChild(document.createElement('thead'));
+  const tr = thead.appendChild(document.createElement('tr'));
+  cols.forEach(c => { const th = tr.appendChild(document.createElement('th')); th.textContent = c; });
+  return t.appendChild(document.createElement('tbody'));
+}
+function mkTD(tr, text) { const td = tr.appendChild(document.createElement('td')); td.textContent = text; return td; }
+function addKStat(p, num, lbl) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'ks';
+  const n = d.appendChild(document.createElement('div')); n.className = 'kn'; n.textContent = num;
+  const l = d.appendChild(document.createElement('div')); l.className = 'kl'; l.textContent = lbl;
+}
+
+loadReqs();
+</script>
+</body></html>

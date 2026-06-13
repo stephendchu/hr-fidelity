@@ -13,3 +13,6 @@ build/
 # Generated corpus — reproducible from manifest.json via corpus_generator.py
 data/resumes/
 data/counterfactual_pairs/
+
+# Design screenshots
+src/hrfidelity/server/static/designs/*.png

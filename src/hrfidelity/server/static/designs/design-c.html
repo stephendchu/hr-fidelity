@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design C — Indigo Glass</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(135deg,#0f0c2a 0%,#1a0f3c 40%,#0c1628 100%);background-attachment:fixed;color:#e2e0f0;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+nav{background:rgba(255,255,255,.04);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08);padding:0 2.5rem;display:flex;align-items:center;gap:2.5rem;height:56px;position:sticky;top:0}
+.logo{font-weight:800;font-size:1.05rem;background:linear-gradient(90deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02em}
+nav a{color:rgba(255,255,255,.45);text-decoration:none;font-size:.85rem;transition:color .15s}
+nav a:hover{color:rgba(255,255,255,.85)}
+.hero{max-width:680px;margin:0 auto;padding:4.5rem 2rem 3rem;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.25);border-radius:99px;padding:.25rem .9rem;font-size:.75rem;font-weight:600;color:#a78bfa;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1.4rem}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:1.1rem}
+h1 .g{background:linear-gradient(90deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:rgba(255,255,255,.5);font-size:.95rem;max-width:500px;margin:0 auto}
+.main{max-width:1080px;margin:0 auto;padding:0 2rem 3rem}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
+.glass{background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:1.4rem 1.6rem}
+.glass+.glass{margin-top:1rem}
+.ct{font-weight:700;font-size:.92rem;margin-bottom:1.1rem;color:rgba(255,255,255,.85)}
+.ctrl{margin-bottom:1rem}
+.ctrl label{display:block;font-size:.76rem;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.06em}
+select{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e2e0f0;padding:.45rem .7rem;font-size:.88rem}
+.srow{display:flex;align-items:center;gap:.7rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:rgba(255,255,255,.1);border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:linear-gradient(135deg,#a78bfa,#60a5fa);border-radius:50%;border:2px solid rgba(255,255,255,.2)}
+.sv{min-width:36px;text-align:right;font-size:.82rem;font-weight:700;background:linear-gradient(90deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.trow{display:flex;align-items:center;gap:.7rem;font-size:.88rem;color:rgba(255,255,255,.6)}
+.tog{position:relative;width:38px;height:21px}
+.tog input{opacity:0;width:0;height:0}
+.tog-t{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:99px;transition:background .2s}
+.tog input:checked~.tog-t{background:linear-gradient(90deg,#a78bfa,#60a5fa)}
+.tog-th{position:absolute;width:15px;height:15px;top:3px;left:3px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.tog input:checked~.tog-th{transform:translateX(17px)}
+.btn{width:100%;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:10px;padding:.7rem 1rem;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:1rem;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.rh h3{font-size:.9rem;font-weight:700;color:rgba(255,255,255,.85)}
+.badge-v{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .8rem;border-radius:99px;font-size:.76rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.cert{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.25)}
+.blk{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.25)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sub{font-size:.78rem;color:rgba(255,255,255,.35)}
+.meta{display:flex;gap:1.5rem;margin-top:.75rem;font-size:.8rem;color:rgba(255,255,255,.35)}
+.meta strong{color:rgba(255,255,255,.7)}
+table{width:100%;border-collapse:collapse;margin-top:.6rem}
+th{text-align:left;font-size:.72rem;font-weight:600;color:rgba(255,255,255,.3);padding-bottom:.35rem;letter-spacing:.04em;text-transform:uppercase}
+td{padding:.3rem 0;font-size:.84rem;color:rgba(255,255,255,.75)}
+.bw{background:rgba(0,0,0,.3);border-radius:99px;height:6px;overflow:hidden;min-width:80px}
+.bf-g{height:100%;border-radius:99px;background:linear-gradient(90deg,#34d399,#60a5fa)}
+.bf-r{height:100%;border-radius:99px;background:linear-gradient(90deg,#f87171,#fb923c)}
+.gn{color:#34d399}.rd{color:#f87171}
+.dt-row td{border-bottom:1px solid rgba(255,255,255,.05);padding:.32rem 0}
+.dt-row:last-child td{border-bottom:none}
+.dt-num{text-align:right}
+.kg{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:.65rem 0}
+.ks{text-align:center;background:rgba(0,0,0,.2);border-radius:10px;padding:.65rem .5rem}
+.kn{font-size:1.6rem;font-weight:800;background:linear-gradient(90deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.kl{font-size:.68rem;color:rgba(255,255,255,.35);margin-top:.1rem}
+.kbw{height:6px;background:rgba(0,0,0,.3);border-radius:99px;margin:.6rem 0 .35rem;overflow:hidden}
+.kbf{height:100%;border-radius:99px;background:linear-gradient(90deg,#a78bfa,#60a5fa)}
+.ka{display:flex;justify-content:space-between;font-size:.68rem;color:rgba(255,255,255,.3)}
+.ka .t{color:#a78bfa;font-weight:600}
+.sec-t{font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;color:rgba(255,255,255,.85)}
+</style></head><body>
+<nav>
+  <div class="logo">HRFidelity</div>
+  <a href="#">How it works</a><a href="#">Audit</a><a href="#">Fidelity</a>
+</nav>
+<div class="hero">
+  <div class="badge"><div class="badge-dot"></div>AI Screening Audit</div>
+  <h1>Fair screening<br>starts with <span class="g">audit</span></h1>
+  <p>Three independent bias checks certify your AI screener before it touches a single live application.</p>
+</div>
+<div class="main">
+  <div class="sec-t">Live bias audit</div>
+  <div class="grid">
+    <div class="glass">
+      <div class="ct">Screener configuration</div>
+      <div class="ctrl"><label>Job requisition</label>
+        <select><option>Senior Backend Engineer</option></select></div>
+      <div class="ctrl"><label>Prestige bonus</label>
+        <div class="srow"><input type="range" value="0" min="0" max="50"><span class="sv">0.00</span></div></div>
+      <div class="ctrl"><label>Skills weight</label>
+        <div class="srow"><input type="range" value="60" min="30" max="90"><span class="sv">0.60</span></div></div>
+      <div class="ctrl"><label>Advance threshold</label>
+        <div class="srow"><input type="range" value="70" min="40" max="90"><span class="sv">0.70</span></div></div>
+      <div class="ctrl"><label>Name-based signals</label>
+        <div class="trow"><div class="tog"><input type="checkbox"><div class="tog-t"></div><div class="tog-th"></div></div>Off — names hidden</div></div>
+      <button class="btn">Run audit</button>
+    </div>
+    <div>
+      <div class="glass">
+        <div class="rh"><h3>Verdict</h3><div class="badge-v cert"><div class="dot"></div>CERTIFIED</div></div>
+        <div class="sub">all checks passed</div>
+        <div class="meta"><span>Résumés: <strong>150</strong></span><span>Pairs: <strong>450</strong></span></div>
+      </div>
+      <div class="glass">
+        <div class="rh"><h3>Four-fifths disparate impact</h3><span class="gn" style="font-size:.8rem;font-weight:700">✓ PASS</span></div>
+        <div class="sub" style="margin-bottom:.5rem">ratio ≥ 0.80 per group</div>
+        <table>
+          <thead><tr><th>Group</th><th style="padding:0 .75rem">Rate</th><th>Ratio</th></tr></thead>
+          <tbody>
+            <tr><td class="sub">race:white</td>
+              <td style="padding:0 .75rem"><div class="bw"><div class="bf-g" style="width:100%"></div></div></td>
+              <td class="gn" style="text-align:right;font-weight:600">1.00</td></tr>
+            <tr><td class="sub">race:black</td>
+              <td style="padding:0 .75rem"><div class="bw"><div class="bf-g" style="width:100%"></div></div></td>
+              <td class="gn" style="text-align:right;font-weight:600">1.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="glass">
+        <div class="rh"><h3>Counterfactual drift</h3><span class="gn" style="font-size:.8rem;font-weight:700">✓ PASS</span></div>
+        <div class="sub" style="margin-bottom:.5rem">mean drift ≤ 0.05</div>
+        <table>
+          <thead><tr><th>Axis</th><th class="dt-num">Mean</th><th class="dt-num">Max</th><th class="dt-num">Flip%</th><th class="dt-num">Pairs</th></tr></thead>
+          <tbody>
+            <tr class="dt-row"><td>gender</td><td class="gn dt-num">0.0000</td><td class="dt-num sub">0.0000</td><td class="dt-num sub">0.0%</td><td class="dt-num sub">150</td></tr>
+            <tr class="dt-row"><td>prestige</td><td class="gn dt-num">0.0000</td><td class="dt-num sub">0.0000</td><td class="dt-num sub">0.0%</td><td class="dt-num sub">150</td></tr>
+            <tr class="dt-row"><td>race_proxy</td><td class="gn dt-num">0.0000</td><td class="dt-num sub">0.0000</td><td class="dt-num sub">0.0%</td><td class="dt-num sub">150</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="glass">
+        <div class="rh"><h3>Recruiter calibration (κ)</h3><span class="gn" style="font-size:.8rem;font-weight:700">✓ PASS</span></div>
+        <div class="kg">
+          <div class="ks"><div class="kn">0.773</div><div class="kl">Mean κ</div></div>
+          <div class="ks"><div class="kn">0.636</div><div class="kl">Human-human κ</div></div>
+          <div class="ks"><div class="kn">100%</div><div class="kl">Gold accuracy</div></div>
+        </div>
+        <div class="kbw"><div class="kbf" style="width:88%"></div></div>
+        <div class="ka"><span>−1</span><span class="t">0.60 threshold</span><span>1.0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

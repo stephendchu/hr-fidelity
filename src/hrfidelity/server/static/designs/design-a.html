@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design A — Dark Amber (Current)</title>
+<style>
+:root{--bg:#111110;--surface:#1c1c1a;--border:#2e2e2b;--amber:#d4a853;--text:#e8e6e0;--muted:#7a7870;--green:#4caf7d;--red:#e05c5c;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+nav{background:rgba(17,17,16,.95);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:2rem;height:52px;position:sticky;top:0}
+.logo{font-weight:800;font-size:1rem;color:var(--amber);letter-spacing:-.02em}.logo span{color:var(--text)}
+nav a{color:var(--muted);text-decoration:none;font-size:.85rem}
+.hero{max-width:700px;margin:0 auto;padding:4rem 2rem 2.5rem;text-align:center}
+.tag{display:inline-block;background:rgba(212,168,83,.12);color:var(--amber);border:1px solid rgba(212,168,83,.3);border-radius:99px;padding:.2rem .8rem;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1.2rem}
+h1{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:1rem}
+h1 em{color:var(--amber);font-style:normal}
+.hero p{color:var(--muted);font-size:.95rem;max-width:520px;margin:0 auto}
+.main{max-width:1060px;margin:0 auto;padding:0 2rem 3rem}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:1.25rem;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem}
+.card-title{font-weight:700;font-size:.95rem;margin-bottom:1rem}
+.ctrl{margin-bottom:1rem}
+.ctrl label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.35rem}
+select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.45rem .65rem;font-size:.88rem}
+.srow{display:flex;align-items:center;gap:.6rem}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--border);border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--amber);border-radius:50%;border:2px solid var(--bg)}
+.sv{min-width:34px;text-align:right;font-size:.82rem;font-weight:600;color:var(--amber)}
+.trow{display:flex;align-items:center;gap:.65rem}
+.tog{position:relative;width:36px;height:20px}
+.tog input{opacity:0;width:0;height:0}
+.tog-t{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:background .2s}
+.tog input:checked~.tog-t{background:var(--amber)}
+.tog-th{position:absolute;width:14px;height:14px;top:3px;left:3px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.tog input:checked~.tog-th{transform:translateX(16px)}
+.btn{width:100%;background:var(--amber);color:#111;border:none;border-radius:6px;padding:.65rem 1rem;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:1rem}
+/* verdict */
+.verdict-card{margin-bottom:1rem}
+.v-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.v-row h3{font-size:.95rem;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;border-radius:99px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.cert{background:rgba(76,175,125,.15);color:var(--green);border:1px solid rgba(76,175,125,.3)}
+.block{background:rgba(224,92,92,.15);color:var(--red);border:1px solid rgba(224,92,92,.3)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.sub{font-size:.78rem;color:var(--muted)}
+.meta{display:flex;gap:1.5rem;margin-top:.75rem;font-size:.8rem;color:var(--muted)}
+.meta strong{color:var(--text)}
+/* bars */
+.bt{width:100%;border-collapse:collapse;margin-top:.6rem}
+.bt th{text-align:left;font-size:.74rem;font-weight:600;color:var(--muted);padding-bottom:.35rem}
+.bt td{padding:.3rem 0;font-size:.85rem;vertical-align:middle}
+.bw{background:var(--bg);border-radius:99px;height:7px;min-width:80px;overflow:hidden}
+.bf{height:100%;border-radius:99px}
+.gn{color:var(--green)}.rd{color:var(--red)}
+/* drift */
+.dt td{border-bottom:1px solid rgba(255,255,255,.04);padding:.38rem 0}
+.dt tr:last-child td{border-bottom:none}
+.dt th{border-bottom:1px solid var(--border);padding-bottom:.35rem}
+.dt td:not(:first-child){text-align:right;font-size:.82rem}
+/* kappa */
+.kg{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:.75rem 0}
+.ks{text-align:center}
+.kn{font-size:1.8rem;font-weight:800;color:var(--amber)}
+.kl{font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.kbw{height:8px;background:var(--bg);border-radius:99px;margin:.75rem 0 .4rem;overflow:hidden}
+.kbf{height:100%;border-radius:99px;background:var(--amber)}
+.ka{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted)}
+.ka .thr{color:var(--amber);font-weight:600}
+.sec-title{font-size:1.15rem;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:.5rem;margin-bottom:1.25rem}
+.sec-title span{color:var(--amber);margin-right:.3rem}
+</style></head><body>
+<nav>
+  <div class="logo">HR<span>Fidelity</span></div>
+  <a href="#">How it works</a><a href="#">Audit</a><a href="#">Fidelity</a>
+</nav>
+<div class="hero">
+  <div class="tag">AI Resume Screening Audit</div>
+  <h1>Does your AI screener<br>pick resumes <em>fairly</em>?</h1>
+  <p>Three independent checks — disparate impact, counterfactual drift, and recruiter–AI agreement — certify or block your screener.</p>
+</div>
+<div class="main">
+  <div class="sec-title" style="margin-bottom:1.25rem"><span>02</span> Live bias audit</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Screener configuration</div>
+      <div class="ctrl"><label>Job requisition</label>
+        <select><option>Senior Backend Engineer</option></select></div>
+      <div class="ctrl"><label>Prestige bonus</label>
+        <div class="srow"><input type="range" value="0" min="0" max="0.5" step="0.05"><span class="sv">0.00</span></div></div>
+      <div class="ctrl"><label>Skills weight</label>
+        <div class="srow"><input type="range" value="60" min="30" max="90"><span class="sv">0.60</span></div></div>
+      <div class="ctrl"><label>Advance threshold</label>
+        <div class="srow"><input type="range" value="70" min="40" max="90"><span class="sv">0.70</span></div></div>
+      <div class="ctrl"><label>Name-based signals</label>
+        <div class="trow" style="font-size:.88rem;">
+          <div class="tog"><input type="checkbox"><div class="tog-t"></div><div class="tog-th"></div></div>
+          Off — screener cannot see names
+        </div></div>
+      <button class="btn">Run audit</button>
+    </div>
+    <div>
+      <div class="card verdict-card">
+        <div class="v-row"><h3>Verdict</h3>
+          <div class="badge cert"><div class="dot"></div>CERTIFIED</div></div>
+        <div class="sub">all checks passed</div>
+        <div class="meta"><span>Résumés: <strong>150</strong></span><span>Pairs: <strong>450</strong></span></div>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="v-row"><h3>Four-fifths disparate impact</h3><span class="gn" style="font-size:.82rem;font-weight:700">✓ PASS</span></div>
+        <div class="sub" style="margin-bottom:.5rem">Threshold: ratio ≥ 0.80</div>
+        <table class="bt">
+          <thead><tr><th>Group</th><th style="padding:0 .75rem">Rate</th><th>Ratio</th></tr></thead>
+          <tbody>
+            <tr><td class="sub">race_proxy:white</td>
+              <td style="padding:0 .75rem"><div class="bw"><div class="bf" style="width:100%;background:var(--green)"></div></div></td>
+              <td class="gn" style="text-align:right;font-weight:600">1.00</td></tr>
+            <tr><td class="sub">race_proxy:black</td>
+              <td style="padding:0 .75rem"><div class="bw"><div class="bf" style="width:100%;background:var(--green)"></div></div></td>
+              <td class="gn" style="text-align:right;font-weight:600">1.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="v-row"><h3>Counterfactual drift</h3><span class="gn" style="font-size:.82rem;font-weight:700">✓ PASS</span></div>
+        <div class="sub" style="margin-bottom:.5rem">Threshold: mean drift ≤ 0.05</div>
+        <table class="bt dt">
+          <thead><tr><th>Axis</th><th style="text-align:right">Mean</th><th style="text-align:right">Max</th><th style="text-align:right">Flip%</th><th style="text-align:right">Pairs</th></tr></thead>
+          <tbody>
+            <tr><td>gender</td><td class="gn">0.0000</td><td>0.0000</td><td>0.0%</td><td>150</td></tr>
+            <tr><td>prestige_tier</td><td class="gn">0.0000</td><td>0.0000</td><td>0.0%</td><td>150</td></tr>
+            <tr><td>race_proxy</td><td class="gn">0.0000</td><td>0.0000</td><td>0.0%</td><td>150</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="v-row"><h3>Recruiter calibration (κ)</h3><span class="gn" style="font-size:.82rem;font-weight:700">✓ PASS</span></div>
+        <div class="kg">
+          <div class="ks"><div class="kn">0.773</div><div class="kl">Mean κ AI vs recruiter</div></div>
+          <div class="ks"><div class="kn">0.636</div><div class="kl">κ human-human</div></div>
+          <div class="ks"><div class="kn">100%</div><div class="kl">Gold accuracy</div></div>
+        </div>
+        <div class="kbw"><div class="kbf" style="width:88%"></div></div>
+        <div class="ka"><span>−1</span><span class="thr">0.60 threshold</span><span>1.0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>
