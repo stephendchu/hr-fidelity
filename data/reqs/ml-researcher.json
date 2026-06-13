@@ -1,0 +1,38 @@
+{
+  "id": "ml-researcher",
+  "title": "Machine Learning Researcher",
+  "required_skills": [
+    "Python",
+    "Machine Learning",
+    "Statistics",
+    "PyTorch",
+    "Research Methods",
+    "SQL"
+  ],
+  "nice_to_have": [
+    "CUDA",
+    "MLflow",
+    "Feature Engineering",
+    "Natural Language Processing",
+    "Computer Vision",
+    "Distributed Training"
+  ],
+  "min_years": 3,
+  "true_rubric": {
+    "strong": {
+      "min_years_exp": 4,
+      "required_skill_coverage": 0.85,
+      "nice_to_have_count": 3
+    },
+    "medium": {
+      "min_years_exp": 2,
+      "required_skill_coverage": 0.65,
+      "nice_to_have_count": 1
+    },
+    "weak": {
+      "min_years_exp": 0,
+      "required_skill_coverage": 0.35,
+      "nice_to_have_count": 0
+    }
+  }
+}

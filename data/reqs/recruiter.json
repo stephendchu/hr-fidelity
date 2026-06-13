@@ -1,0 +1,36 @@
+{
+  "id": "recruiter",
+  "title": "Technical Recruiter",
+  "required_skills": [
+    "Candidate Sourcing",
+    "Applicant Tracking Systems",
+    "Behavioral Interviewing",
+    "Offer Negotiation",
+    "Stakeholder Management"
+  ],
+  "nice_to_have": [
+    "Data Analysis",
+    "LinkedIn Recruiter",
+    "Diversity Recruiting",
+    "Technical Recruiting",
+    "Workforce Planning"
+  ],
+  "min_years": 2,
+  "true_rubric": {
+    "strong": {
+      "min_years_exp": 4,
+      "required_skill_coverage": 0.80,
+      "nice_to_have_count": 2
+    },
+    "medium": {
+      "min_years_exp": 2,
+      "required_skill_coverage": 0.60,
+      "nice_to_have_count": 1
+    },
+    "weak": {
+      "min_years_exp": 0,
+      "required_skill_coverage": 0.40,
+      "nice_to_have_count": 0
+    }
+  }
+}

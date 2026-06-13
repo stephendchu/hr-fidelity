@@ -1,0 +1,38 @@
+{
+  "id": "infra-eng",
+  "title": "Infrastructure Engineer",
+  "required_skills": [
+    "Kubernetes",
+    "Docker",
+    "Terraform",
+    "Linux",
+    "CI/CD",
+    "AWS"
+  ],
+  "nice_to_have": [
+    "Ansible",
+    "Helm",
+    "Prometheus",
+    "Grafana",
+    "Python",
+    "GCP"
+  ],
+  "min_years": 3,
+  "true_rubric": {
+    "strong": {
+      "min_years_exp": 5,
+      "required_skill_coverage": 0.85,
+      "nice_to_have_count": 3
+    },
+    "medium": {
+      "min_years_exp": 3,
+      "required_skill_coverage": 0.60,
+      "nice_to_have_count": 1
+    },
+    "weak": {
+      "min_years_exp": 1,
+      "required_skill_coverage": 0.33,
+      "nice_to_have_count": 0
+    }
+  }
+}

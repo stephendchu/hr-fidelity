@@ -1,0 +1,26 @@
+{
+  "_source": "US Census Bureau 2010 Frequently Occurring Surnames (vendored sample). Full dataset: https://www.census.gov/topics/population/genealogy/data/2010_surnames.html — not shipped. Race probabilities are approximate modal values from the Census file, used only to infer a race proxy for synthetic candidates.",
+  "_note": "Surnames are proxies for inferred race/ethnicity probability, not identity. This list includes names from the counterfactual swap table so every sampled surname has a known twin.",
+  "surnames": [
+    {"name": "Walsh",       "modal_race": "white",    "race_probs": {"white": 0.92, "black": 0.02, "hispanic": 0.03, "asian": 0.01, "other": 0.02}},
+    {"name": "Sullivan",    "modal_race": "white",    "race_probs": {"white": 0.94, "black": 0.01, "hispanic": 0.02, "asian": 0.01, "other": 0.02}},
+    {"name": "McCarthy",    "modal_race": "white",    "race_probs": {"white": 0.95, "black": 0.01, "hispanic": 0.02, "asian": 0.01, "other": 0.01}},
+    {"name": "Murray",      "modal_race": "white",    "race_probs": {"white": 0.90, "black": 0.03, "hispanic": 0.04, "asian": 0.01, "other": 0.02}},
+    {"name": "Baker",       "modal_race": "white",    "race_probs": {"white": 0.82, "black": 0.09, "hispanic": 0.05, "asian": 0.02, "other": 0.02}},
+    {"name": "Kelly",       "modal_race": "white",    "race_probs": {"white": 0.93, "black": 0.02, "hispanic": 0.03, "asian": 0.01, "other": 0.01}},
+    {"name": "Quinn",       "modal_race": "white",    "race_probs": {"white": 0.91, "black": 0.02, "hispanic": 0.04, "asian": 0.01, "other": 0.02}},
+    {"name": "Anderson",    "modal_race": "white",    "race_probs": {"white": 0.76, "black": 0.14, "hispanic": 0.06, "asian": 0.02, "other": 0.02}},
+    {"name": "Wilson",      "modal_race": "white",    "race_probs": {"white": 0.69, "black": 0.22, "hispanic": 0.05, "asian": 0.02, "other": 0.02}},
+    {"name": "Washington",  "modal_race": "black",    "race_probs": {"white": 0.13, "black": 0.79, "hispanic": 0.05, "asian": 0.01, "other": 0.02}},
+    {"name": "Jefferson",   "modal_race": "black",    "race_probs": {"white": 0.35, "black": 0.55, "hispanic": 0.05, "asian": 0.02, "other": 0.03}},
+    {"name": "Jackson",     "modal_race": "black",    "race_probs": {"white": 0.39, "black": 0.53, "hispanic": 0.04, "asian": 0.02, "other": 0.02}},
+    {"name": "Williams",    "modal_race": "black",    "race_probs": {"white": 0.46, "black": 0.47, "hispanic": 0.04, "asian": 0.01, "other": 0.02}},
+    {"name": "Robinson",    "modal_race": "white",    "race_probs": {"white": 0.54, "black": 0.38, "hispanic": 0.05, "asian": 0.01, "other": 0.02}},
+    {"name": "Johnson",     "modal_race": "white",    "race_probs": {"white": 0.54, "black": 0.37, "hispanic": 0.05, "asian": 0.02, "other": 0.02}},
+    {"name": "Davis",       "modal_race": "white",    "race_probs": {"white": 0.61, "black": 0.29, "hispanic": 0.06, "asian": 0.02, "other": 0.02}},
+    {"name": "Harris",      "modal_race": "white",    "race_probs": {"white": 0.62, "black": 0.29, "hispanic": 0.05, "asian": 0.02, "other": 0.02}},
+    {"name": "Martinez",    "modal_race": "hispanic", "race_probs": {"white": 0.04, "black": 0.01, "hispanic": 0.93, "asian": 0.01, "other": 0.01}},
+    {"name": "Kim",         "modal_race": "asian",    "race_probs": {"white": 0.02, "black": 0.00, "hispanic": 0.01, "asian": 0.96, "other": 0.01}},
+    {"name": "Chen",        "modal_race": "asian",    "race_probs": {"white": 0.01, "black": 0.00, "hispanic": 0.01, "asian": 0.97, "other": 0.01}}
+  ]
+}

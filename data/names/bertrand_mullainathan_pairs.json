@@ -1,0 +1,26 @@
+{
+  "_source": "Bertrand, M., & Mullainathan, S. (2004). 'Are Emily and Greg More Employable than Lakisha and Jamal? A Field Experiment on Labor Market Discrimination.' American Economic Review, 94(4), 991-1013.",
+  "_note": "These first-name pairs are the canonical experimental instrument for measuring name-based racial discrimination in hiring. 'White' and 'Black' refer to the signal carried by these names in Bertrand & Mullainathan's audit study — they are proxies, not identity. Used here to ground counterfactual twins in published methodology: any score delta between a white-signal twin and its Black-signal twin is interpretable as the same audit the B-M paper ran.",
+  "male_pairs": [
+    {"white": "Neil",      "black": "Rasheed"},
+    {"white": "Geoffrey",  "black": "Tremayne"},
+    {"white": "Brett",     "black": "Kareem"},
+    {"white": "Brendan",   "black": "Darnell"},
+    {"white": "Greg",      "black": "Tyrone"},
+    {"white": "Todd",      "black": "Hakim"},
+    {"white": "Matthew",   "black": "Jamal"},
+    {"white": "Jay",       "black": "Leroy"},
+    {"white": "Brad",      "black": "Jermaine"}
+  ],
+  "female_pairs": [
+    {"white": "Emily",     "black": "Aisha"},
+    {"white": "Anne",      "black": "Keisha"},
+    {"white": "Jill",      "black": "Tamika"},
+    {"white": "Allison",   "black": "Lakisha"},
+    {"white": "Laurie",    "black": "Ebony"},
+    {"white": "Sarah",     "black": "Shanice"},
+    {"white": "Meredith",  "black": "Aaliyah"},
+    {"white": "Carrie",    "black": "Precious"},
+    {"white": "Kristen",   "black": "Nia"}
+  ]
+}
