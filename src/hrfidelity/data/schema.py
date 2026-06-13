@@ -39,3 +39,10 @@ class Resume:
     skills: list[str]
     certifications: list[str]
     latent_fit: Literal["strong", "medium", "weak"]
+
+
+@dataclass
+class CounterfactualPair:
+    base: Resume
+    twin: Resume
+    axis: str  # "gender" | "race_proxy" | "prestige_tier"

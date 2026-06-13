@@ -89,3 +89,34 @@ def sample_identity(rng: random.Random) -> Identity:
         inferred_race_proxy=race_proxy,
         source=source,
     )
+
+
+def sample_swappable_identity(rng: random.Random) -> Identity:
+    """Like sample_identity but restricted to names that exist in the
+    counterfactual swap table — guarantees generate_counterfactual never
+    raises ValueError on gender or race_proxy axes.
+
+    Used by the corpus generator so every résumé in the dataset has a
+    valid counterfactual twin on all three axes.
+    """
+    from hrfidelity.data.counterfactual import (
+        SWAPPABLE_FEMALE_NAMES,
+        SWAPPABLE_MALE_NAMES,
+        SWAPPABLE_SURNAMES,
+    )
+
+    gender: str = rng.choice(["M", "F"])
+    first_name = rng.choice(SWAPPABLE_MALE_NAMES if gender == "M" else SWAPPABLE_FEMALE_NAMES)
+
+    last_name = rng.choice(SWAPPABLE_SURNAMES)
+    race_proxy = _SURNAME_RACES.get(last_name, "other")
+
+    source = "bertrand_mullainathan" if first_name in _BM_FIRST_NAMES else "ssa"
+
+    return Identity(
+        first_name=first_name,
+        last_name=last_name,
+        inferred_gender=gender,
+        inferred_race_proxy=race_proxy,
+        source=source,
+    )

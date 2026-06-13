@@ -55,6 +55,12 @@ _BLACK_TO_WHITE: dict[str, str] = {b: w for w, b in _RACE_SURNAME_PAIRS}
 # prestige_tier flip: keep it simple — elite↔regional, selective↔regional.
 _PRESTIGE_FLIP: dict[int, int] = {1: 3, 2: 3, 3: 1}
 
+# Public: names the corpus generator may sample from to guarantee every
+# résumé has a valid swap partner on all axes.
+SWAPPABLE_MALE_NAMES: list[str] = list(_MALE_TO_FEMALE.keys())
+SWAPPABLE_FEMALE_NAMES: list[str] = list(_FEMALE_TO_MALE.keys())
+SWAPPABLE_SURNAMES: list[str] = list(_WHITE_TO_BLACK.keys()) + list(_BLACK_TO_WHITE.keys())
+
 
 # ---------------------------------------------------------------------------
 # content_hash
@@ -102,7 +108,12 @@ def content_hash(resume: Resume) -> str:
 # generate_counterfactual
 # ---------------------------------------------------------------------------
 
-def generate_counterfactual(base: Resume, *, axis: str) -> Resume:
+def generate_counterfactual(
+    base: Resume,
+    *,
+    axis: str,
+    rng: "random.Random | None" = None,
+) -> Resume:
     """Return a deep copy of *base* with exactly one proxy field changed.
 
     Axes:
@@ -110,11 +121,18 @@ def generate_counterfactual(base: Resume, *, axis: str) -> Resume:
       "race_proxy"   — swap last_name and inferred_race_proxy
       "prestige_tier"— flip the prestige_tier of the first education entry
 
+    Pass *rng* to make the twin's candidate_id reproducible (corpus generator).
+    Omit *rng* to get a random UUID (fine for one-off use).
+
     Raises ValueError if the base name is not in the built-in swap table
     (add new pairs to _GENDER_PAIRS / _RACE_SURNAME_PAIRS as needed).
     """
+    import random as _random
     twin = copy.deepcopy(base)
-    twin.candidate_id = str(uuid.uuid4())
+    if rng is not None:
+        twin.candidate_id = str(uuid.UUID(int=rng.getrandbits(128)))
+    else:
+        twin.candidate_id = str(uuid.uuid4())
 
     if axis == "gender":
         fn = base.identity.first_name

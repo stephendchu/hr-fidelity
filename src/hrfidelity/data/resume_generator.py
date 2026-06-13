@@ -14,7 +14,7 @@ later without changing the interface or breaking any tests.
 import random
 import uuid
 
-from hrfidelity.data.name_loader import sample_identity
+from hrfidelity.data.name_loader import sample_identity, sample_swappable_identity
 from hrfidelity.data.req_loader import Req
 from hrfidelity.data.schema import Education, Experience, Resume
 
@@ -133,12 +133,21 @@ def _generate_education(
 # Public API
 # ---------------------------------------------------------------------------
 
-def generate_resume(req: Req, latent_fit: str, rng: random.Random) -> Resume:
+def generate_resume(
+    req: Req,
+    latent_fit: str,
+    rng: random.Random,
+    *,
+    swappable_identity: bool = False,
+) -> Resume:
     """Return one synthetic Resume conditioned on (req, latent_fit).
 
     Identity is sampled after all job-relevant content is determined, using
     the same rng — but its value is structurally independent of latent_fit
     because sample_identity() ignores fit entirely.
+
+    Pass swappable_identity=True (corpus generator) to restrict names to those
+    that have a known swap partner on all counterfactual axes.
     """
     band = getattr(req.true_rubric, latent_fit)
 
@@ -152,10 +161,11 @@ def generate_resume(req: Req, latent_fit: str, rng: random.Random) -> Resume:
     education = _generate_education(req.id, band.min_years_exp, rng)
 
     # Identity sampled independently — never conditioned on latent_fit
-    identity = sample_identity(rng)
+    _sample = sample_swappable_identity if swappable_identity else sample_identity
+    identity = _sample(rng)
 
     return Resume(
-        candidate_id=str(uuid.uuid4()),
+        candidate_id=str(uuid.UUID(int=rng.getrandbits(128))),
         identity=identity,
         education=education,
         experience=experience,

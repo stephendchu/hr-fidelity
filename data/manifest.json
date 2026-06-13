@@ -1,0 +1,30 @@
+{
+  "_generated_at": "2026-06-13T10:52:18.138788+00:00",
+  "_generator": "hrfidelity v0.1.0",
+  "seed": 42,
+  "n_per_fit": 20,
+  "req_ids": "see data/reqs/ for req fixtures",
+  "axes": [
+    "gender",
+    "race_proxy",
+    "prestige_tier"
+  ],
+  "counts": {
+    "resumes": 240,
+    "pairs": 720
+  },
+  "checks": {
+    "invariant": {
+      "passed": true,
+      "detail": "720 pairs passed"
+    },
+    "independence": {
+      "passed": true,
+      "detail": "gender ratio within [0.15, 0.85] for all fit levels"
+    },
+    "realism": {
+      "passed": true,
+      "detail": "240 r\u00e9sum\u00e9s pass structure check"
+    }
+  }
+}
