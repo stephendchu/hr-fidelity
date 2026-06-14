@@ -121,7 +121,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; h
 .run-btn:disabled { opacity:.5; cursor:not-allowed; }
 
 /* Result cards */
-.v-banner { background:var(--green-l); border:1px solid #bbf7d0; border-radius:var(--r); padding:1.2rem 1.5rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.v-banner { background:var(--green-l); border:1px solid #bbf7d0; border-radius:var(--r); padding:1.2rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
 .v-banner.blocked { background:#fef2f2; border-color:#fecaca; }
 .v-label { font-size:.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.25rem; }
 .v-main  { font-size:1.1rem; font-weight:800; color:var(--green); }
@@ -175,6 +175,34 @@ tr:last-child td { border-bottom:none; }
 /* Footer */
 footer { background:var(--dark); color:#6b7280; padding:2rem; text-align:center; font-size:.8rem; }
 footer a { color:#94a3b8; text-decoration:none; }
+
+/* Scope grid (replaces inline style for responsive override) */
+.scope-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto; }
+
+/* ── Mobile (≤640px) ── */
+@media(max-width:640px){
+  nav { padding:0 1rem; }
+  .nav-links { display:none; }
+  .float-card { display:none; }
+  .hero { padding:5.5rem 1.25rem 3.5rem; }
+  .hero-actions { flex-wrap:wrap; justify-content:stretch; }
+  .hero-actions .btn-primary, .hero-actions .btn-ghost { width:100%; text-align:center; }
+  .stats-strip { flex-wrap:wrap; }
+  .stat { padding:.75rem 0; width:50%; border-right:none; border-bottom:1px solid var(--border); }
+  .stat:nth-child(odd) { border-right:1px solid var(--border); }
+  .stat:nth-last-child(-n+2) { border-bottom:none; }
+  .features { padding:3rem 1.25rem; }
+  .story-section { padding:3rem 1.25rem; }
+  .audit-section { padding:3rem 1rem; }
+  .scope-grid { grid-template-columns:1fr; gap:1.75rem; }
+  .verdict-hero { flex-direction:column; align-items:flex-start; }
+  .vh-metrics { width:100%; justify-content:space-between; }
+  .kg { grid-template-columns:1fr 1fr; }
+  table { display:block; overflow-x:auto; }
+  .cta-section { padding:4rem 1.25rem; }
+  .cta-actions { flex-direction:column; align-items:stretch; }
+  .cta-actions .btn-primary, .cta-actions .btn-ghost { width:100%; text-align:center; }
+}
 
 /* Data note */
 .data-note { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:.75rem 1.1rem; font-size:.8rem; color:#92400e; display:flex; align-items:flex-start; gap:.6rem; margin-bottom:1.5rem; }
@@ -272,7 +300,7 @@ footer a { color:#94a3b8; text-decoration:none; }
 
 <!-- Scope / Limitations -->
 <section style="background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2.5rem 2rem">
-  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3rem">
+  <div class="scope-grid">
     <div>
       <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">What this audit covers</div>
       <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
