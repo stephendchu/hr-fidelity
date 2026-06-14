@@ -56,6 +56,8 @@ flowchart TD
 
 The audit layer is screener-agnostic — it receives scores and measures their properties. Swap the rubric for an LLM, a fine-tuned classifier, or a third-party vendor API behind the `score(resume, req, config) → Score` interface and the audit runs unchanged.
 
+**[→ Full architecture diagram + module map](docs/ARCHITECTURE.md)**
+
 **Four-fifths disparate impact (EEOC § 60-3.4 / NYC LL 144 / California FEHA):** any demographic group selected at less than 80% of the top group's rate triggers a violation. Measured from synthetic self-reported EEO race — the same basis real HR compliance uses, not name inference. Groups below the statistical minimum sample size are shown in the table but excluded from the verdict.
 
 **Counterfactual drift (proxy detection):** every résumé gets a matched twin — identical skills and experience, one proxy signal swapped (name, institution tier, or gender signal). Mean score drift > 5% blocks certification. Pairs are grounded in Bertrand & Mullainathan (2004). The counterfactual invariant — content hash equality between twins — is mechanically enforced and CI-tested.
