@@ -421,6 +421,64 @@ footer a { color:#94a3b8; text-decoration:none; }
 
 <footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
 
+<!-- Four-fifths modal -->
+<div class="modal-overlay" id="fourfifths-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('fourfifths-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Legal standard</div>
+    <h3>What is Four-fifths disparate impact?</h3>
+    <p>The four-fifths rule is the legal test used by the EEOC (Equal Employment Opportunity Commission) and required by <strong>NYC Local Law 144</strong> for any automated hiring tool.</p>
+    <p>It works like this: find the demographic group with the highest selection rate (the group most often moved forward). Every other group must be selected at <strong>at least 80% of that rate</strong>. If any group falls below 80%, that's a disparate impact violation.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> If white applicants advance at a 40% rate, then Black applicants must advance at 32% or higher (80% × 40%). A rate of 28% would fail the test — even if the screener never looked at race directly.
+    </div>
+    <p>The rule catches <em>outcome gaps</em>, not intent. A screener can be completely "race-blind" in its inputs and still fail this test if its scoring produces unequal outcomes.</p>
+    <div class="modal-verdict">
+      <strong>In this audit:</strong> This check runs across race-proxy groups. A ratio below 0.80 for any group triggers a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<!-- Counterfactual drift modal -->
+<div class="modal-overlay" id="drift-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('drift-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Bias probe</div>
+    <h3>What is Counterfactual drift?</h3>
+    <p>Counterfactual drift measures whether the screener scores the <strong>same résumé differently depending on demographic signals</strong>.</p>
+    <p>For every candidate in the pool, the audit generates a matched twin: an identical résumé with one thing swapped — the name (a race/gender proxy), the school prestige tier, or a gender signal. Everything else — skills, experience, education level — stays exactly the same.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> "Lakisha Washington, B.S. Computer Science, 5 years experience, Python/SQL/Docker" vs "Emily Walsh, B.S. Computer Science, 5 years experience, Python/SQL/Docker." If the screener gives these different scores, that gap is the drift.
+    </div>
+    <p>The audit measures <strong>mean drift</strong> across all pairs. A fair screener should score twins nearly identically. Drift above 5% (0.05) indicates the screener is using the swapped signal — which is a proxy for a protected characteristic — to make its decision.</p>
+    <div class="modal-verdict">
+      <strong>In this audit:</strong> Drift is measured separately for name (race proxy), prestige tier, and gender signal. Mean drift above the threshold on any axis triggers a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<!-- Kappa modal -->
+<div class="modal-overlay" id="kappa-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('kappa-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Agreement check</div>
+    <h3>What is Recruiter calibration (κ)?</h3>
+    <p>Before trusting an AI screener's output, you need to know whether it agrees with human recruiters on what a good candidate looks like. That's what this check measures.</p>
+    <p><strong>κ (Cohen's kappa)</strong> is a statistical measure of agreement between two raters — in this case, the AI screener and a panel of experienced recruiters. It's scored from −1 to 1, where 1 means perfect agreement and 0 means no better than chance.</p>
+    <div class="modal-example">
+      <strong>How to read it:</strong><br>
+      κ ≥ 0.80 — Near-perfect agreement<br>
+      κ ≥ 0.60 — Substantial agreement ✓ (required to pass)<br>
+      κ ≥ 0.40 — Moderate agreement<br>
+      κ &lt; 0.40 — Weak or poor agreement ✗
+    </div>
+    <p>A screener that fails this check isn't just biased — it's <em>unreliable</em>. It's making different calls than the humans it's supposed to assist, which means it shouldn't be trusted with hiring decisions at all.</p>
+    <div class="modal-verdict">
+      <strong>In this audit:</strong> The AI screener is compared against three synthetic recruiters on blind A/B pairs. Mean κ below 0.60 triggers a <strong>BLOCKED</strong> verdict independently of the bias checks.
+    </div>
+  </div>
+</div>
+
 <!-- Prestige bonus modal -->
 <div class="modal-overlay" id="prestige-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box">
@@ -651,7 +709,7 @@ function renderResults(panel, audit, fidelity) {
 
   // Four-fifths
   const ffCard = mkCard(panel, '1rem');
-  const ffh = mkCh(ffCard, 'Four-fifths disparate impact'); mkPill(ffh, audit.four_fifths.passed);
+  const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
   mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144');
   const fft = mkTable(ffCard, ['Group','Rate bar','Sel. rate','Ratio']);
   Object.entries(audit.four_fifths.ratios).forEach(([key, ratio]) => {
@@ -670,7 +728,7 @@ function renderResults(panel, audit, fidelity) {
 
   // Drift
   const drCard = mkCard(panel, '1rem');
-  const drh = mkCh(drCard, 'Counterfactual drift'); mkPill(drh, audit.drift.passed);
+  const drh = mkCh(drCard, 'Counterfactual drift', 'drift-modal'); mkPill(drh, audit.drift.passed);
   mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
   const drt = mkTable(drCard, ['Axis','Mean drift','Max drift','Flip rate','Pairs']);
   Object.entries(audit.drift.axis_results).forEach(([axis, r]) => {
@@ -685,7 +743,7 @@ function renderResults(panel, audit, fidelity) {
 
   // Fidelity
   const fidCard = mkCard(panel, '1rem');
-  const fidh = mkCh(fidCard, 'Recruiter calibration (κ)'); mkPill(fidh, fidelity.passes);
+  const fidh = mkCh(fidCard, 'Recruiter calibration (κ)', 'kappa-modal'); mkPill(fidh, fidelity.passes);
   const kg = fidCard.appendChild(document.createElement('div')); kg.className = 'kg';
   addKStat(kg, fidelity.mean_kappa_ai_human.toFixed(3),         'Mean κ');
   addKStat(kg, fidelity.kappa_human_human.toFixed(3),           'Human-human κ');
@@ -706,9 +764,18 @@ function mkCard(p, mt) {
   const d = p.appendChild(document.createElement('div')); d.className = 'card';
   if (mt) d.style.marginTop = mt; return d;
 }
-function mkCh(p, title) {
+function mkCh(p, title, modalId) {
   const d = p.appendChild(document.createElement('div')); d.className = 'ch';
-  const h = d.appendChild(document.createElement('h3')); h.textContent = title; return d;
+  const left = d.appendChild(document.createElement('div'));
+  left.style.cssText = 'display:flex;align-items:center;gap:.35rem';
+  const h = left.appendChild(document.createElement('h3')); h.textContent = title;
+  if (modalId) {
+    const btn = left.appendChild(document.createElement('button'));
+    btn.className = 'info-btn'; btn.textContent = '?';
+    btn.setAttribute('aria-label', 'Learn more about ' + title);
+    btn.onclick = () => document.getElementById(modalId).classList.add('open');
+  }
+  return d;
 }
 function mkPill(p, passed) {
   const s = p.appendChild(document.createElement('span')); s.className = passed ? 'pass-pill' : 'fail-pill';
