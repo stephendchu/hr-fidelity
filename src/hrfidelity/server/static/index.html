@@ -491,7 +491,7 @@ footer a { color:#94a3b8; text-decoration:none; }
           <div class="tog"><input type="checkbox" id="name-signal"><div class="tog-t"></div><div class="tog-th"></div></div>
           <span id="name-signal-label">Off — screener cannot see names</span>
         </label>
-        <div id="name-signal-hint" style="font-size:.76rem;color:#9ca3af;margin-top:.4rem">Simulates a screener using applicant names to infer race and gender signals.</div>
+        <div id="name-signal-hint" style="font-size:.76rem;color:#9ca3af;margin-top:.4rem">Turn on to simulate a screener that learned to use applicant names as race and gender proxies — then watch the audit catch it.</div>
       </div>
       <button class="run-btn" id="run-btn" onclick="runAudit()">Run audit</button>
     </div>
@@ -656,17 +656,15 @@ footer a { color:#94a3b8; text-decoration:none; }
 <div class="modal-overlay" id="name-signal-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box">
     <button class="modal-close" onclick="document.getElementById('name-signal-modal').classList.remove('open')" aria-label="Close">✕</button>
-    <div class="modal-tag">Demo feature</div>
+    <div class="modal-tag">Demo feature — the Amazon failure mode</div>
     <h3>What are name-based signals?</h3>
-    <p>Résumés don't have a race field — applicants don't write their race on a CV. But a name carries that information implicitly. A <strong>name-based race signal</strong> is when an algorithm uses an applicant's name to infer their race and adjusts their score accordingly — making race-based decisions without ever seeing a demographic field.</p>
-    <p>A name-based signal is when a hiring algorithm — intentionally or not — uses an applicant's <strong>name as a proxy for their race or gender</strong> and adjusts their score based on that.</p>
-    <p>It works because names carry demographic information. Research shows that résumés with names commonly associated with Black applicants receive fewer callbacks than identical résumés with white-associated names — even when every other detail is the same.</p>
+    <p>Résumés don't have a race field. But a name carries demographic information implicitly — and a model trained on biased historical data learns to use it. Amazon's hiring tool never had a rule that said "penalize Black applicants." It learned to penalize names <em>associated</em> with Black applicants, because those names were underrepresented in its training set of past successful hires.</p>
     <div class="modal-example">
-      <strong>Example:</strong> Two résumés. Same skills, same experience, same degree. One says "Lakisha Washington." The other says "Emily Walsh." A screener using name-based signals scores Lakisha lower — not because of her qualifications, but because of what her name signals about her background.
+      <strong>Example:</strong> Two résumés. Same skills, same experience, same degree. One says "Lakisha Washington." The other says "Emily Walsh." A screener using name signals scores Lakisha lower — not because of her qualifications, but because of what her name signals about her background. This is the pattern Bertrand &amp; Mullainathan (2004) documented in their landmark audit study.
     </div>
-    <p>This is the bias pattern documented by Bertrand &amp; Mullainathan (2004) in their landmark audit study, and it's what <strong>NYC Local Law 144</strong> and the <strong>EEOC four-fifths rule</strong> are designed to catch.</p>
+    <p>Real-world screeners don't expose this as a knob — the bias emerges from training data. This toggle makes it explicit so you can verify the audit actually works.</p>
     <div class="modal-verdict">
-      <strong>In this demo:</strong> Turning this toggle ON simulates a screener that has learned to use name signals. The audit will detect the resulting score gap between demographic groups and issue a <strong>BLOCKED</strong> verdict.
+      <strong>Why it's in this demo:</strong> Turning this on applies the same score adjustments a biased model would learn implicitly (+15% white, −20% Black, −10% Hispanic from race proxy; +10% male, −10% female from gender signal). The four-fifths check and counterfactual drift probe both catch it — and you can watch the verdict flip from <strong>CERTIFIED</strong> to <strong>BLOCKED</strong> in real time. If the audit catches manually injected bias, it will catch emergent bias from a production model.
     </div>
   </div>
 </div>
@@ -767,7 +765,12 @@ wireSlider('advance-threshold', v => v.toFixed(2), v => {
 });
 document.getElementById('name-signal').addEventListener('change', e => {
   const on = e.target.checked;
-  document.getElementById('name-signal-label').textContent = on ? 'On — name-based race and gender signals active' : 'Off — screener cannot see names';
+  document.getElementById('name-signal-label').textContent = on
+    ? 'ON — NAME-BASED RACE AND GENDER SIGNALS ACTIVE'
+    : 'Off — screener scores on qualifications only';
+  document.getElementById('name-signal-hint').textContent = on
+    ? 'Applies score adjustments from inferred name signals: +15% white, −20% Black, −10% Hispanic · +10% male, −10% female. Reproduces the Amazon failure mode.'
+    : 'Turn on to simulate a screener that learned to use applicant names as race and gender proxies — then watch the audit catch it.';
   document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
   schedulePoolRefresh();
 });
