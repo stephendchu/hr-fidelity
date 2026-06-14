@@ -708,6 +708,64 @@ document.getElementById('name-signal').addEventListener('change', e => {
   const on = e.target.checked;
   document.getElementById('name-signal-label').textContent = on ? 'On — name-based race and gender signals active' : 'Off — screener cannot see names';
   document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
+  schedulePoolRefresh();
+});
+
+// ── Pool refresh (re-scores when prestige/skills/name-signal change) ───────
+function getConfig() {
+  return {
+    prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
+    name_signal:           document.getElementById('name-signal').checked,
+    required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
+    threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
+  };
+}
+
+let _poolRefreshTimer = null;
+function schedulePoolRefresh() {
+  // No-op if no pool has been rendered yet
+  if (!window._updatePool) return;
+  clearTimeout(_poolRefreshTimer);
+  _poolRefreshTimer = setTimeout(refreshPool, 350);
+}
+
+async function refreshPool() {
+  if (!window._updatePool) return;
+  const reqId = document.getElementById('req-select').value;
+  if (!reqId) return;
+
+  const poolWrap = document.querySelector('.pool-dot')?.parentElement;
+  if (!poolWrap) return;
+
+  // Show loading state on dots
+  poolWrap.querySelectorAll('.pool-dot').forEach(d => { d.style.opacity = '.3'; });
+
+  try {
+    const res = await fetch('/api/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ req_id: reqId, config: getConfig() }),
+    });
+    if (!res.ok) return;
+    const scores = await res.json();
+    const sorted = [...scores].sort((a, b) => b.raw_score - a.raw_score);
+
+    // Re-assign scores to existing dots in sorted order
+    const dots = Array.from(poolWrap.querySelectorAll('.pool-dot'));
+    sorted.forEach((c, i) => {
+      if (dots[i]) dots[i].dataset.score = c.raw_score;
+    });
+
+    window._poolScores = sorted;
+    window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
+  } catch (_) {
+    poolWrap.querySelectorAll('.pool-dot').forEach(d => { d.style.opacity = '1'; });
+  }
+}
+
+// Wire prestige and skills sliders to pool refresh on release
+['prestige-bonus', 'skills-weight'].forEach(id => {
+  document.getElementById(id).addEventListener('change', schedulePoolRefresh);
 });
 
 // ── Load reqs ─────────────────────────────────────────────────────────────
