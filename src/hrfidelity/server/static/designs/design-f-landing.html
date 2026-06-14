@@ -210,7 +210,7 @@ footer a { color:#94a3b8; text-decoration:none; }
   </div>
 
   <div class="hero-tag"><div class="hero-tag-dot"></div>AI Resume Screening Audit</div>
-  <h1>Certify your AI screener<br>is <span class="accent">free of proxy bias</span><br>before it sees one résumé</h1>
+  <h1>Audit your AI screener for<br><span class="accent">name-proxy and prestige bias</span><br>before it sees one résumé</h1>
   <p class="hero-sub">Three independent checks — disparate impact, counterfactual drift, and recruiter–AI agreement — certify or block your screener. Every metric is reproducible and audit-ready.</p>
   <div class="hero-actions">
     <button class="btn-primary" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Run a live audit</button>
@@ -253,9 +253,33 @@ footer a { color:#94a3b8; text-decoration:none; }
         <p>It was shut down before deployment. But the pattern didn't stop at Amazon. Any screener trained on past hires inherits past bias. <strong>HR Fidelity audits before the screener ever sees a live application.</strong></p>
       </div>
       <div class="story-quote">
-        <p>"The tool penalized résumés that included the word 'women's', as in 'women's chess club captain'. And it downgraded graduates of two all-women's colleges."</p>
-        <cite>— Reuters, October 2018, reporting on Amazon's internal audit findings</cite>
+        <p>Amazon's system learned to penalize résumés that mentioned women's organizations and downgraded graduates of women's colleges — a direct consequence of training on a decade of hiring decisions made by a male-dominated workforce.</p>
+        <cite>— Based on Amazon's internal audit findings, reported 2018</cite>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scope / Limitations -->
+<section style="background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2.5rem 2rem">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3rem">
+    <div>
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">What this audit covers</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Name-proxy bias — Bertrand-Mullainathan race-signal first names</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Institution prestige-tier bias — elite vs regional school weighting</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Gender-signal bias from name-based proxies</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> EEOC four-fifths disparate impact across demographic groups</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin-bottom:.75rem">What it doesn't claim</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Zip code, address, or neighbourhood correlates</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Employment gap or career-path patterns</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Résumé phrasing that encodes demographic signal</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Bias learned from real historical training data</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -308,7 +332,7 @@ footer a { color:#94a3b8; text-decoration:none; }
 <!-- CTA -->
 <section class="cta-section">
   <div class="cta-glow"></div>
-  <h2>Your screener. Certified fair.<br>Before a single hire.</h2>
+  <h2>Your screener. Audit-ready.<br>Before a single hire.</h2>
   <p>HR Fidelity gives you the audit trail that legal, compliance, and regulators expect — built on open, reproducible methodology.</p>
   <div class="cta-actions">
     <button class="btn-primary" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Run your audit now</button>
@@ -317,7 +341,7 @@ footer a { color:#94a3b8; text-decoration:none; }
   <div class="disclosure-note">🔒 All data is synthetic · No employer records used · Open-source corpus</div>
 </section>
 
-<footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="#">GitHub</a></footer>
+<footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>

@@ -41,6 +41,22 @@ The screener is not the hard part. The trust layer is.
 
 ---
 
+## Why we built the rubric screener first
+
+The screener (Layer 1) is the **subject under test**, not the product. The audit layer is the product.
+
+We built a deterministic, rubric-based screener first — deliberately, not as a shortcut. The reasons:
+
+**Verify the audit before auditing anything opaque.** With a transparent rubric, you can inject *known* bias — set `race_proxy_bias["black"] = -0.20` — and confirm the four-fifths check catches it. If your audit can't detect bias you manually injected, it won't detect bias a model learned implicitly. Rubric-first lets you prove the audit instrument works before pointing it at a black box.
+
+**Separate the audit layer from the screener implementation.** The `score(resume, req, config) → Score` interface is the only contract. The audit layer never calls the screener directly — it receives scores and measures their properties. This makes the audit layer screener-agnostic: swap the rubric for an LLM, a fine-tuned classifier, or a third-party vendor API, and the audit runs unchanged. The interface was designed for this.
+
+**Reproduce the Amazon failure on demand.** The rubric's bias knobs (`prestige_bonus`, `race_proxy_bias`, `gender_bias`) let you recreate Amazon's failure mode in a live demo — and watch the audit catch it. An LLM screener would show emergent bias, which is more realistic but harder to explain and reproduce reliably. The rubric version makes the mechanism legible.
+
+The LLM screener (M5) plugs in behind the same interface. The audit layer doesn't change.
+
+---
+
 ## The demo arc
 
 1. **Default config** — screener passes all three checks. CERTIFIED.
@@ -70,6 +86,9 @@ Any pair whose job-relevant hash differs is rejected before it enters the corpus
 | M2 — The failing demo | ✅ | Rubric screener · four-fifths audit · counterfactual drift probe |
 | M3 — Fidelity layer | ✅ | Blind A/B pairing · Cohen's κ · Fleiss' κ · gold pair accuracy |
 | M4 — Certification dashboard | ✅ | FastAPI server · live config knobs · CERTIFIED/BLOCKED verdict · deployed |
+| M5 — LLM screener | 🔄 | Swap rubric for Claude (Haiku) behind the same interface · blind prompt · emergent bias visible in audit |
+| M6 — Pair comparison UI | ⬜ | Side-by-side counterfactual pairs showing identical résumés scored differently |
+| M7 — Methodology page | ⬜ | GitHub Pages explainer — statistical choices, regulatory citations, Bertrand-Mullainathan grounding |
 
 **223 tests passing, 0 failures.**
 
