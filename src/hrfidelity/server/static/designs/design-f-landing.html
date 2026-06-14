@@ -154,6 +154,16 @@ tr:last-child td { border-bottom:none; }
 .ka { display:flex; justify-content:space-between; font-size:.68rem; color:#9ca3af; }
 .ka .t { color:var(--blue); font-weight:600; }
 
+/* Verdict hero banner */
+.verdict-hero{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-radius:var(--r);margin-bottom:1.5rem;border:1px solid;flex-wrap:wrap;gap:1rem}
+.verdict-hero.certified{background:#f0fdf4;border-color:#bbf7d0}
+.verdict-hero.blocked{background:#fef2f2;border-color:#fecaca}
+.vh-metrics{display:flex;gap:2rem;flex-shrink:0}
+.vh-metric{text-align:center}
+.vh-num{font-size:1.5rem;font-weight:800;line-height:1}
+.vh-lbl{font-size:.68rem;color:#6b7280;margin-top:.2rem;font-weight:500}
+.vh-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:99px;padding:.5rem 1.4rem;font-size:.9rem;font-weight:700;letter-spacing:.04em;flex-shrink:0}
+
 /* CTA */
 .cta-section { position:relative; overflow:hidden; padding:7rem 2rem; text-align:center; background:var(--surface); border-top:1px solid var(--border); }
 .cta-glow { position:absolute; width:700px; height:700px; background:radial-gradient(circle,rgba(37,99,235,.12) 0%,transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
@@ -292,6 +302,20 @@ footer a { color:#94a3b8; text-decoration:none; }
 
   <div class="data-note">
     🔒 <span><strong>Synthetic data only</strong> — résumés generated from public name datasets. No real candidates. No employer records.</span>
+  </div>
+
+  <div id="verdict-hero" class="verdict-hero" style="display:none">
+    <div>
+      <div style="font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem">Audit verdict</div>
+      <div id="vh-verdict" style="font-size:1.6rem;font-weight:900;letter-spacing:-.03em"></div>
+      <div id="vh-sub" style="font-size:.85rem;color:#6b7280;margin-top:.25rem"></div>
+    </div>
+    <div class="vh-metrics">
+      <div class="vh-metric"><div class="vh-num" id="vh-ratio"></div><div class="vh-lbl">Min 4/5 ratio</div></div>
+      <div class="vh-metric"><div class="vh-num" id="vh-drift"></div><div class="vh-lbl">Max drift</div></div>
+      <div class="vh-metric"><div class="vh-num" id="vh-kappa"></div><div class="vh-lbl">Mean κ</div></div>
+    </div>
+    <div class="vh-badge" id="vh-badge"></div>
   </div>
 
   <div class="audit-grid">
@@ -473,6 +497,26 @@ async function runAudit() {
 function renderResults(panel, audit, fidelity) {
   panel.textContent = '';
   const pass = audit.verdict === 'CERTIFIED';
+
+  // Verdict hero (above the grid)
+  const hero = document.getElementById('verdict-hero');
+  hero.className = 'verdict-hero ' + (pass ? 'certified' : 'blocked');
+  hero.style.display = 'flex';
+  document.getElementById('vh-verdict').textContent = pass ? '✓ All checks passed' : '✗ Bias detected — blocked';
+  document.getElementById('vh-sub').textContent = audit.n_resumes + ' résumés · ' + audit.n_pairs + ' pairs';
+  const minRatio = Math.min(...Object.values(audit.four_fifths.ratios));
+  const maxDrift = Math.max(...Object.values(audit.drift.axis_results).map(r => r.max_drift));
+  document.getElementById('vh-ratio').textContent = minRatio.toFixed(2);
+  document.getElementById('vh-ratio').style.color = minRatio >= 0.8 ? '#16a34a' : '#dc2626';
+  document.getElementById('vh-drift').textContent = maxDrift.toFixed(3);
+  document.getElementById('vh-drift').style.color = maxDrift <= audit.drift.drift_threshold ? '#16a34a' : '#dc2626';
+  document.getElementById('vh-kappa').textContent = fidelity.mean_kappa_ai_human.toFixed(3);
+  document.getElementById('vh-kappa').style.color = fidelity.mean_kappa_ai_human >= 0.6 ? '#16a34a' : '#dc2626';
+  const vhBadge = document.getElementById('vh-badge');
+  vhBadge.textContent = pass ? 'CERTIFIED' : 'BLOCKED';
+  vhBadge.style.background = pass ? '#16a34a' : '#dc2626';
+  vhBadge.style.color = '#fff';
+  gsap.from(hero, { opacity:0, y:-12, duration:.4, ease:'power2.out' });
 
   // Verdict banner
   const vb = panel.appendChild(document.createElement('div'));

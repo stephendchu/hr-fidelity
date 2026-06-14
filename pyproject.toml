@@ -13,6 +13,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "httpx>=0.27"]
+llm = ["anthropic>=0.25"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
