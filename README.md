@@ -2,9 +2,15 @@
 
 > **Can you trust the AI reading your résumés?**
 
-[![Live demo](https://img.shields.io/badge/Live%20demo-hr--fidelity--schu.fly.dev-2563eb?style=for-the-badge)](https://hr-fidelity-schu.fly.dev)
+<p align="center">
+  <a href="https://hr-fidelity-schu.fly.dev">
+    <img src="https://img.shields.io/badge/▶%20%20Live%20demo-hr--fidelity--schu.fly.dev-2563eb?style=for-the-badge&logoColor=white" alt="Live demo"/>
+  </a>
+</p>
 
-[![](src/hrfidelity/server/static/designs/design-f-full.png)](https://hr-fidelity-schu.fly.dev)
+<p align="center"><strong><a href="https://hr-fidelity-schu.fly.dev">hr-fidelity-schu.fly.dev</a> — toggle bias knobs, watch the audit flip CERTIFIED → BLOCKED in real time</strong></p>
+
+---
 
 An integrated AI governance evaluation pipeline for resume screeners. The system combines disparate impact analysis, proxy-signal detection, counterfactual testing, recruiter calibration, and deployment gating into a single reproducible workflow — issuing a machine-readable CERTIFIED or BLOCKED verdict before the screener touches a live application.
 
