@@ -179,6 +179,23 @@ footer a { color:#94a3b8; text-decoration:none; }
 /* Scope grid (replaces inline style for responsive override) */
 .scope-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto; }
 
+/* Info modal */
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.7rem;font-weight:700;border:none;cursor:pointer;line-height:1;vertical-align:middle;margin-left:.35rem;flex-shrink:0;transition:background .15s}
+.info-btn:hover{background:#d1d5db;color:var(--dark)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:16px;padding:2rem 2rem 1.75rem;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.18);position:relative;transform:translateY(12px);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--border);border:none;border-radius:50%;width:28px;height:28px;font-size:.9rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#d1d5db}
+.modal-tag{display:inline-block;background:#fef3c7;color:#92400e;border-radius:99px;padding:.2rem .75rem;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1rem}
+.modal-box h3{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem}
+.modal-box p{font-size:.9rem;color:#374151;line-height:1.65;margin-bottom:.75rem}
+.modal-box p:last-of-type{margin-bottom:0}
+.modal-example{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#7f1d1d;line-height:1.6}
+.modal-example strong{color:#991b1b}
+.modal-verdict{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#14532d;line-height:1.6}
+
 /* ── Mobile (≤640px) ── */
 @media(max-width:640px){
   nav { padding:0 1rem; }
@@ -366,7 +383,7 @@ footer a { color:#94a3b8; text-decoration:none; }
         <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
       </div>
       <div class="ctrl">
-        <label>Name-based signals</label>
+        <label style="display:flex;align-items:center">Name-based signals <button class="info-btn" onclick="document.getElementById('name-signal-modal').classList.add('open')" aria-label="What are name-based signals?">?</button></label>
         <label class="trow">
           <div class="tog"><input type="checkbox" id="name-signal"><div class="tog-t"></div><div class="tog-th"></div></div>
           <span id="name-signal-label">Off — screener cannot see names</span>
@@ -394,6 +411,24 @@ footer a { color:#94a3b8; text-decoration:none; }
 </section>
 
 <footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
+
+<!-- Name-signal explainer modal -->
+<div class="modal-overlay" id="name-signal-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('name-signal-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Demo feature</div>
+    <h3>What are name-based signals?</h3>
+    <p>A name-based signal is when a hiring algorithm — intentionally or not — uses an applicant's <strong>name as a proxy for their race or gender</strong> and adjusts their score based on that.</p>
+    <p>It works because names carry demographic information. Research shows that résumés with names commonly associated with Black applicants receive fewer callbacks than identical résumés with white-associated names — even when every other detail is the same.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> Two résumés. Same skills, same experience, same degree. One says "Lakisha Washington." The other says "Emily Walsh." A screener using name-based signals scores Lakisha lower — not because of her qualifications, but because of what her name signals about her background.
+    </div>
+    <p>This is the bias pattern documented by Bertrand &amp; Mullainathan (2004) in their landmark audit study, and it's what <strong>NYC Local Law 144</strong> and the <strong>EEOC four-fifths rule</strong> are designed to catch.</p>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Turning this toggle ON simulates a screener that has learned to use name signals. The audit will detect the resulting score gap between demographic groups and issue a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
