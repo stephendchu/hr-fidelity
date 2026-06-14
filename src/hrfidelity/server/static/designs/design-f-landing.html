@@ -129,6 +129,14 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; h
 .v-sub   { font-size:.8rem; color:var(--muted); margin-top:.15rem; }
 .v-badge { background:var(--green); color:#fff; border-radius:99px; padding:.35rem 1rem; font-size:.8rem; font-weight:700; display:flex; align-items:center; gap:.35rem; }
 .v-badge.blocked { background:var(--red); }
+.exec-summary { border-radius:var(--r); border:1px solid; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.exec-summary.certified { background:#f0fdf4; border-color:#bbf7d0; }
+.exec-summary.blocked   { background:#fff8f1; border-color:#fed7aa; }
+.exec-summary h4 { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem; }
+.exec-summary.certified h4 { color:#15803d; }
+.exec-summary.blocked   h4 { color:#c2410c; }
+.exec-summary p { font-size:.9rem; color:#374151; line-height:1.7; margin-bottom:.5rem; }
+.exec-summary p:last-child { margin-bottom:0; }
 .vd { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.7); }
 .pass-pill { background:#dcfce7; color:#16a34a; border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
 .fail-pill { background:#fee2e2; color:var(--red); border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
@@ -163,6 +171,7 @@ tr:last-child td { border-bottom:none; }
 .vh-metric{text-align:center}
 .vh-num{font-size:1.5rem;font-weight:800;line-height:1}
 .vh-lbl{font-size:.68rem;color:#6b7280;margin-top:.2rem;font-weight:500}
+.vh-req{font-size:.65rem;color:#9ca3af;margin-top:.1rem}
 .vh-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:99px;padding:.5rem 1.4rem;font-size:.9rem;font-weight:700;letter-spacing:.04em;flex-shrink:0}
 
 /* CTA */
@@ -173,8 +182,15 @@ tr:last-child td { border-bottom:none; }
 .cta-actions { position:relative; display:flex; align-items:center; gap:1rem; justify-content:center; opacity:0; }
 .disclosure-note { position:relative; display:flex; align-items:center; gap:.5rem; justify-content:center; margin-top:1.5rem; font-size:.8rem; color:#9ca3af; }
 
+/* Regulatory badge strip */
+.reg-strip { background:var(--dark); border-top:1px solid rgba(255,255,255,.06); padding:1.75rem 2rem; text-align:center; }
+.reg-strip-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#4b5563; margin-bottom:.85rem; }
+.reg-badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.6rem; }
+.reg-badge { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(255,255,255,.1); border-radius:99px; padding:.3rem .85rem; font-size:.75rem; color:#9ca3af; font-weight:500; }
+.reg-badge svg { flex-shrink:0; opacity:.6; }
+
 /* Footer */
-footer { background:var(--dark); color:#6b7280; padding:2rem; text-align:center; font-size:.8rem; }
+footer { background:var(--dark); color:#6b7280; padding:1.5rem 2rem; text-align:center; font-size:.8rem; border-top:1px solid rgba(255,255,255,.05); }
 footer a { color:#94a3b8; text-decoration:none; }
 
 /* Candidate pool dots */
@@ -416,9 +432,21 @@ footer a { color:#94a3b8; text-decoration:none; }
       <div id="vh-sub" style="font-size:.85rem;color:#6b7280;margin-top:.25rem"></div>
     </div>
     <div class="vh-metrics">
-      <div class="vh-metric"><div class="vh-num" id="vh-ratio"></div><div class="vh-lbl">Min 4/5 ratio</div></div>
-      <div class="vh-metric"><div class="vh-num" id="vh-drift"></div><div class="vh-lbl">Max drift</div></div>
-      <div class="vh-metric"><div class="vh-num" id="vh-kappa"></div><div class="vh-lbl">Mean κ</div></div>
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-ratio"></div>
+        <div class="vh-lbl" id="vh-ratio-lbl">Disparate impact ratio</div>
+        <div class="vh-req">Required ≥ 0.80</div>
+      </div>
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-drift"></div>
+        <div class="vh-lbl">Max score drift</div>
+        <div class="vh-req">Required ≤ 0.05</div>
+      </div>
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-kappa"></div>
+        <div class="vh-lbl">Recruiter agreement κ</div>
+        <div class="vh-req">Required ≥ 0.60</div>
+      </div>
     </div>
     <div class="vh-badge" id="vh-badge"></div>
   </div>
@@ -468,11 +496,32 @@ footer a { color:#94a3b8; text-decoration:none; }
   <p>HR Fidelity gives you the audit trail that legal, compliance, and regulators expect — built on open, reproducible methodology.</p>
   <div class="cta-actions">
     <button class="btn-primary" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Run your audit now</button>
-    <button class="btn-ghost">Read the methodology</button>
+    <button class="btn-ghost" onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">Read the methodology</button>
   </div>
   <div class="disclosure-note">🔒 All data is synthetic · No employer records used · Open-source corpus</div>
 </section>
 
+<div class="reg-strip">
+  <div class="reg-strip-label">Regulatory Frameworks Referenced</div>
+  <div class="reg-badges">
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      EEOC Uniform Guidelines — Four-Fifths Rule
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      NYC Local Law 144 (2023)
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      California FEHA / CRD AI Employment Guidance
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      EU AI Act — High-Risk Employment Systems
+    </span>
+  </div>
+</div>
 <footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
 
 <!-- Four-fifths modal -->
@@ -844,6 +893,7 @@ function renderResults(panel, audit, fidelity, scores) {
   const maxDrift = Math.max(...Object.values(audit.drift.axis_results).map(r => r.max_drift));
   document.getElementById('vh-ratio').textContent = minRatio.toFixed(2);
   document.getElementById('vh-ratio').style.color = minRatio >= 0.8 ? '#16a34a' : '#dc2626';
+  document.getElementById('vh-ratio-lbl').textContent = 'Disparate impact ratio · ' + (minRatio >= 0.8 ? 'PASS' : 'FAIL');
   document.getElementById('vh-drift').textContent = maxDrift.toFixed(3);
   document.getElementById('vh-drift').style.color = maxDrift <= audit.drift.drift_threshold ? '#16a34a' : '#dc2626';
   document.getElementById('vh-kappa').textContent = fidelity.mean_kappa_ai_human.toFixed(3);
@@ -865,6 +915,53 @@ function renderResults(panel, audit, fidelity, scores) {
   const dot = badge.appendChild(document.createElement('div')); dot.className = 'vd';
   badge.appendChild(document.createTextNode(pass ? 'CERTIFIED' : 'BLOCKED'));
 
+  // Executive summary
+  (function() {
+    const ex = panel.appendChild(document.createElement('div'));
+    ex.className = 'exec-summary ' + (pass ? 'certified' : 'blocked');
+    const h4 = ex.appendChild(document.createElement('h4'));
+    h4.textContent = pass ? 'Why this screener passed' : 'Why this screener was blocked';
+
+    // Find worst four-fifths group
+    const ffRatios = audit.four_fifths.ratios;
+    const ffGroups = audit.four_fifths.groups;
+    const worstKey = Object.entries(ffRatios).sort((a,b) => a[1]-b[1])[0];
+    const worstGroup = worstKey ? ffGroups.find(g => worstKey[0].includes(g.group)) : null;
+    const bestGroup  = worstKey ? ffGroups.find(g => ffRatios[`eeo_race:${g.group}`] === Math.max(...Object.values(ffRatios))) : null;
+
+    // Find worst drift axis
+    const driftResults = audit.drift.axis_results;
+    const worstDriftEntry = Object.entries(driftResults).sort((a,b) => b[1].flip_rate - a[1].flip_rate)[0];
+    const AXIS_LABEL_PLAIN = { race_proxy:'applicant name (race signal)', gender:'applicant name (gender signal)', prestige_tier:'school prestige' };
+
+    const p1 = ex.appendChild(document.createElement('p'));
+    if (!pass && worstGroup && bestGroup) {
+      const topRate  = (bestGroup.selection_rate  * 100).toFixed(1);
+      const failRate = (worstGroup.selection_rate * 100).toFixed(1);
+      const ratio    = worstKey[1].toFixed(2);
+      p1.innerHTML = `The screener advanced <strong>${bestGroup.group}</strong> applicants at a <strong>${topRate}%</strong> rate and <strong>${worstGroup.group}</strong> applicants at a <strong>${failRate}%</strong> rate, producing a disparate-impact ratio of <strong>${ratio}</strong> — below the required 0.80 threshold. This triggers a violation under EEOC § 60-3.4 and NYC Local Law 144.`;
+    } else if (pass) {
+      const minRatioVal = Math.min(...Object.values(ffRatios));
+      p1.innerHTML = `All racial/ethnic groups were advanced at comparable rates. The lowest disparate-impact ratio was <strong>${minRatioVal.toFixed(2)}</strong>, above the 0.80 threshold required by EEOC § 60-3.4 and NYC Local Law 144.`;
+    } else {
+      p1.textContent = audit.detail;
+    }
+
+    if (!pass && worstDriftEntry && worstDriftEntry[1].flip_rate > 0.05) {
+      const p2 = ex.appendChild(document.createElement('p'));
+      const axLabel = AXIS_LABEL_PLAIN[worstDriftEntry[0]] || worstDriftEntry[0];
+      p2.innerHTML = `Investigation shows that <strong>${axLabel}</strong> acted as a proxy feature. Altering only that signal changed model decisions in <strong>${(worstDriftEntry[1].flip_rate * 100).toFixed(0)}%</strong> of tested pairs of otherwise-identical résumés.`;
+    }
+
+    const p3 = ex.appendChild(document.createElement('p'));
+    const kappaOk = fidelity.mean_kappa_ai_human >= 0.6;
+    if (!pass) {
+      p3.innerHTML = `Because the model fails fairness requirements, deployment is blocked despite ${kappaOk ? 'strong' : 'weak'} recruiter agreement (κ = <strong>${fidelity.mean_kappa_ai_human.toFixed(3)}</strong>). Recruiter agreement measures consistency, not fairness — a biased screener can be consistently wrong.`;
+    } else {
+      p3.innerHTML = `Recruiter agreement is ${kappaOk ? 'strong' : 'below threshold'} (κ = <strong>${fidelity.mean_kappa_ai_human.toFixed(3)}</strong>), confirming the AI decisions are consistent with human judgment. The screener is cleared for deployment under current configuration.`;
+    }
+  })();
+
   // Candidate pool visualization
   if (scores && scores.length) {
     const poolCard = mkCard(panel, '1rem');
@@ -885,9 +982,9 @@ function renderResults(panel, audit, fidelity, scores) {
       const dot = poolWrap.appendChild(document.createElement('div'));
       dot.className = 'pool-dot';
       dot.dataset.score = c.raw_score;
-      dot.dataset.race = c.race_proxy;
-      dot.title = `Score: ${(c.raw_score*100).toFixed(0)} · ${c.race_proxy} · ${c.latent_fit}`;
-      const color = RACE_COLOR[c.race_proxy] || '#9ca3af';
+      dot.dataset.race = c.eeo_race || c.race_proxy;
+      dot.title = `Score: ${(c.raw_score*100).toFixed(0)} · ${c.eeo_race || c.race_proxy} · ${c.latent_fit}`;
+      const color = RACE_COLOR[c.eeo_race] || RACE_COLOR[c.race_proxy] || '#9ca3af';
       dot.style.background = color;
     });
 
@@ -912,32 +1009,60 @@ function renderResults(panel, audit, fidelity, scores) {
         else                 { d.style.opacity = '.18'; d.style.transform = 'scale(0.7)'; rej++; }
       });
       const sub = document.getElementById('pool-sub');
-      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by name-inferred race signal`;
+      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by self-reported race/ethnicity`;
     };
     window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
+  }
+
+  // Screener configuration
+  if (audit.screener_config) {
+    const cfgCard = mkCard(panel, '1rem');
+    mkCh(cfgCard, 'Screener configuration tested');
+    mkSub(cfgCard, 'Exact settings submitted to the audit — required for NYC LL 144 documentation');
+    const sc = audit.screener_config;
+    const cfgRows = [
+      ['Required skills weight',  (sc.required_skill_weight * 100).toFixed(0) + '%'],
+      ['Nice-to-have weight',     (sc.nice_to_have_weight   * 100).toFixed(0) + '%'],
+      ['Experience weight',       (sc.experience_weight     * 100).toFixed(0) + '%'],
+      ['Advance threshold',       (sc.threshold_advance     * 100).toFixed(0) + '% score'],
+      ['Prestige bonus',          sc.prestige_bonus > 0 ? '+' + (sc.prestige_bonus * 100).toFixed(0) + '%' : 'Off'],
+      ['Name-based signals',      sc.name_signal ? '⚠ ON — race/gender bias applied' : 'Off'],
+    ];
+    const cfgt = mkTable(cfgCard, ['Setting', 'Value']);
+    cfgRows.forEach(([label, val]) => {
+      const tr = cfgt.appendChild(document.createElement('tr'));
+      mkTD(tr, label).style.color = '#6b7280';
+      const vtd = mkTD(tr, val);
+      if (label === 'Name-based signals' && sc.name_signal) vtd.style.color = '#dc2626';
+    });
   }
 
   // Four-fifths
   const ffCard = mkCard(panel, '1rem');
   const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
-  mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144 · groups identified from applicant names (synthetic EEO data)');
-  const fft = mkTable(ffCard, ['Group','Rate bar','Sel. rate','Ratio']);
-  const fmtGroup = key => {
-    const [, grp] = key.split(':');
-    return grp || key;
-  };
-  Object.entries(audit.four_fifths.ratios).forEach(([key, ratio]) => {
-    const ok = ratio >= 0.8;
+  const minN = audit.four_fifths.stat_min_n || 1;
+  mkSub(ffCard, `Source: self-reported race/ethnicity (EEO form) — not name-inferred · ratio ≥ 0.80 required · EEOC / NYC Local Law 144 · groups with fewer than ${minN} applicants shown but excluded from verdict`);
+  const fft = mkTable(ffCard, ['Group (EEO)','Rate bar','Sel. rate','Ratio / status']);
+  // Show ALL groups sorted by name; dim those below stat threshold
+  const ffGroups = [...audit.four_fifths.groups].sort((a,b) => a.group.localeCompare(b.group));
+  ffGroups.forEach(g => {
+    const ratioKey = `eeo_race:${g.group}`;
+    const ratio = audit.four_fifths.ratios[ratioKey];
+    const inVerdict = g.in_verdict;
+    const ok = ratio !== undefined ? ratio >= 0.8 : true;
     const tr = fft.appendChild(document.createElement('tr'));
-    mkTD(tr, fmtGroup(key)).style.color = '#6b7280';
+    if (!inVerdict) tr.style.opacity = '0.45';
+    mkTD(tr, g.group).style.color = '#6b7280';
     const btd = tr.appendChild(document.createElement('td')); btd.style.padding = '0 1rem';
-    const bw = btd.appendChild(document.createElement('div')); bw.className = 'bw';
-    const bf = bw.appendChild(document.createElement('div')); bf.className = 'bf' + (ok ? '' : ' fail');
-    bf.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
-    const grp = audit.four_fifths.groups.find(g => key.includes(g.group));
-    const sel = grp ? (grp.selection_rate * 100).toFixed(1) + '%' : '—';
-    mkTD(tr, sel).className = 'nut';
-    mkTD(tr, ratio.toFixed(2)).className = 'nut ' + (ok ? 'gn' : 'rd');
+    if (inVerdict && ratio !== undefined) {
+      const bw = btd.appendChild(document.createElement('div')); bw.className = 'bw';
+      const bf = bw.appendChild(document.createElement('div')); bf.className = 'bf' + (ok ? '' : ' fail');
+      bf.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
+    }
+    mkTD(tr, (g.selection_rate * 100).toFixed(1) + '%').className = 'nut';
+    const ratioTd = mkTD(tr, inVerdict && ratio !== undefined ? ratio.toFixed(2) : `n=${g.n} (excluded)`);
+    if (inVerdict && ratio !== undefined) ratioTd.className = 'nut ' + (ok ? 'gn' : 'rd');
+    else ratioTd.style.color = '#9ca3af';
   });
 
   // Drift — pass/warn/fail based on whether violations are on protected axes

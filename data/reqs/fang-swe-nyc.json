@@ -1,0 +1,36 @@
+{
+  "id": "fang-swe-nyc",
+  "title": "Senior Software Engineer — NYC (FANG-tier)",
+  "required_skills": [
+    "Python",
+    "System Design",
+    "Distributed Systems",
+    "Data Structures & Algorithms",
+    "SQL"
+  ],
+  "nice_to_have": [
+    "Go",
+    "Kubernetes",
+    "Machine Learning",
+    "Kafka",
+    "Java"
+  ],
+  "min_years": 4,
+  "true_rubric": {
+    "strong": {
+      "min_years_exp": 6,
+      "required_skill_coverage": 0.90,
+      "nice_to_have_count": 3
+    },
+    "medium": {
+      "min_years_exp": 4,
+      "required_skill_coverage": 0.70,
+      "nice_to_have_count": 1
+    },
+    "weak": {
+      "min_years_exp": 1,
+      "required_skill_coverage": 0.40,
+      "nice_to_have_count": 0
+    }
+  }
+}

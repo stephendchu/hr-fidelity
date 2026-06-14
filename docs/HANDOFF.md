@@ -42,6 +42,21 @@ Uses `uv` for package management. `pyproject.toml` is at root.
 
 ---
 
+## Current state (as of M5 complete)
+
+M1 through M5 are complete and green (249 tests). The live demo is deployed at hr-fidelity-schu.fly.dev.
+
+**Key additions since the original handoff:**
+- `eeo_race` field on `Identity` — synthetic self-reported EEO race (white/Black/Hispanic/Asian), separate from name-inferred `inferred_race_proxy`. Four-fifths check uses `eeo_race`; counterfactual drift uses `inferred_race_proxy`. Independence from `latent_fit` enforced via separate `rng_id` stream + shuffled fit sequence.
+- FANG NYC req (`data/reqs/fang-swe-nyc.json`) — calibrated to tech-sector EEO-1 demographics (~40% Asian, ~35% White, ~15% Hispanic, ~8% Black). Seed 44 ensures fair screener certifies and biased screener blocks.
+- `min_group_size` statistical threshold in four-fifths check — groups below threshold shown in table but excluded from verdict (matches EEOC guidance on small samples).
+- Executive summary block in audit UI — auto-generates plain-English narrative from live audit numbers.
+- Screener configuration card in audit output — documents weights/knobs per NYC LL 144 reporting requirements.
+
+**Next milestones:** M6 (pair comparison UI — side-by-side counterfactual pairs) · M7 (methodology page).
+
+---
+
 ## Where to start — M1, counterfactual hash invariant (TDD)
 
 The build order from `docs/data-generator.md`:

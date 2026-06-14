@@ -14,7 +14,10 @@ Resume {
   identity: {                 # the bias axis — kept SEPARATE from screener input
     first_name, last_name
     inferred_gender            # from SSA first-name → sex
-    inferred_race_proxy        # from Census surname distribution
+    inferred_race_proxy        # name-inferred (white/Black) — B-M axis, used for counterfactual drift only
+    eeo_race                   # synthetic self-reported EEO race (white/Black/Hispanic/Asian)
+                               # assigned independently via EEO-1-calibrated probability matrix
+                               # this is what the four-fifths check uses (same basis as real HR compliance)
     source: "ssa" | "census" | "bertrand_mullainathan"
   }
   education: [{ degree, field, institution, prestige_tier, grad_year, gpa? }]
@@ -66,7 +69,7 @@ Given a base résumé, produce a **twin** that is identical in every job-relevan
 
 ## 6. Validation / honesty checks (run in CI)
 
-1. **Independence check:** in the base population, `identity ⊥ _latent_fit` (no correlation). Proves the *dataset* isn't pre-biased — bias must come from the screener/config, which is the whole thesis.
+1. **Independence check:** in the base population, `identity ⊥ _latent_fit` (no correlation). Proves the *dataset* isn't pre-biased — bias must come from the screener/config, which is the whole thesis. Enforced via a separate `rng_id` stream for identity draws (so identity never correlates with the fit-level generation order) and a shuffled fit assignment sequence.
 2. **Invariant check:** every counterfactual pair passes the §5 hash assertion.
 3. **Realism check:** résumé structure mirrors real ones (Kaggle datasets as *structure* reference only).
 4. **Reproducibility check:** same seed → same corpus.

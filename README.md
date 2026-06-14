@@ -4,7 +4,7 @@
 
 **[→ Live demo: hr-fidelity-schu.fly.dev](https://hr-fidelity-schu.fly.dev)**
 
-A bias-audit and certification layer for AI resume screeners. Three independent checks — EEOC four-fifths disparate impact, counterfactual drift, and recruiter–AI agreement (Cohen's κ) — issue a machine-readable CERTIFIED or BLOCKED verdict before the screener touches a live application.
+An integrated AI governance evaluation pipeline for resume screeners. The system combines disparate impact analysis, proxy-signal detection, counterfactual testing, recruiter calibration, and deployment gating into a single reproducible workflow — issuing a machine-readable CERTIFIED or BLOCKED verdict before the screener touches a live application.
 
 **All data is 100% synthetic. No real candidates. No employer records. [See disclosure ↓](#data-disclosure)**
 
@@ -14,13 +14,13 @@ A bias-audit and certification layer for AI resume screeners. Three independent 
 
 In 2014–2017, Amazon built an ML hiring tool. Trained on past hires — who skewed male — it taught itself to penalize the word *"women's"* and downgrade graduates of two all-women's colleges. Amazon scrapped it in 2017.
 
-**The law caught up.** NYC **Local Law 144** (in force, 2023) mandates a bias audit — using the EEOC four-fifths disparate-impact rule — for any "automated employment decision tool." The **EU AI Act** classifies hiring as high-risk and requires conformity assessment.
+**The law caught up.** NYC **Local Law 144** (in force, 2023) mandates a bias audit for any "automated employment decision tool." The **EU AI Act** classifies hiring as high-risk and requires conformity assessment. **California FEHA** and CRD guidance extend disparate-impact liability to AI employment tools statewide.
 
-The screener is not the hard part. The trust layer is.
+The screener is not the hard part. The evaluation layer is.
 
 ---
 
-## Three checks, one verdict
+## The evaluation pipeline
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -33,11 +33,24 @@ The screener is not the hard part. The trust layer is.
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Four-fifths disparate impact (EEOC § 60-3.4 / NYC LL 144):** any demographic group selected at less than 80% of the top group's rate triggers a violation.
+Each layer feeds the next. The screener's output flows into the fidelity layer (does it agree with calibrated human judgment?) and the audit layer (does it produce disparate outcomes across protected groups?). The combination — not any single check — is what makes the verdict defensible.
 
-**Counterfactual drift:** every résumé gets a matched twin — identical skills and experience, one proxy signal swapped (name, institution tier, or gender signal). Mean score drift > 5% blocks certification. Proxy pairs are grounded in Bertrand & Mullainathan (2004).
+**Four-fifths disparate impact (EEOC § 60-3.4 / NYC LL 144 / California FEHA):** any demographic group selected at less than 80% of the top group's rate triggers a violation. Measured from synthetic self-reported EEO race — the same basis real HR compliance uses, not name inference. Groups below the statistical minimum sample size are shown in the table but excluded from the verdict.
 
-**Recruiter–AI agreement (Cohen's κ):** measures whether the AI and three synthetic human recruiters agree on A/B pairs. κ ≥ 0.60 ("substantial" agreement) is required. Gold pairs act as attention checks.
+**Counterfactual drift (proxy detection):** every résumé gets a matched twin — identical skills and experience, one proxy signal swapped (name, institution tier, or gender signal). Mean score drift > 5% blocks certification. Pairs are grounded in Bertrand & Mullainathan (2004). The counterfactual invariant — content hash equality between twins — is mechanically enforced and CI-tested.
+
+**Recruiter–AI agreement (Cohen's κ):** measures whether the AI and three synthetic human recruiters agree on A/B pairs. κ ≥ 0.60 ("substantial" agreement) is required. Gold pairs act as attention checks. The claim is never "the AI is correct" — it's "the AI agrees with calibrated human judgment."
+
+**Deployment gating:** the CERTIFIED / BLOCKED verdict is the integration point. The screener only operates when all three layers clear. This is the governance pattern emerging in AI Act and LL 144 compliance discussions: evaluation results gate deployment, not just inform it.
+
+### Regulatory frameworks referenced
+
+| Framework | Jurisdiction | What it requires |
+|---|---|---|
+| EEOC Uniform Guidelines (four-fifths rule) | Federal (US) | Disparate impact baseline for all employment tools |
+| NYC Local Law 144 | New York City | Annual third-party bias audit + public disclosure for AEDTs |
+| California FEHA / CRD AI guidance | California | Disparate impact liability under state anti-discrimination law |
+| EU AI Act (Annex III) | European Union | Conformity assessment for high-risk hiring systems |
 
 ---
 
@@ -86,17 +99,17 @@ Any pair whose job-relevant hash differs is rejected before it enters the corpus
 | M2 — The failing demo | ✅ | Rubric screener · four-fifths audit · counterfactual drift probe |
 | M3 — Fidelity layer | ✅ | Blind A/B pairing · Cohen's κ · Fleiss' κ · gold pair accuracy |
 | M4 — Certification dashboard | ✅ | FastAPI server · live config knobs · CERTIFIED/BLOCKED verdict · deployed |
-| M5 — LLM screener | 🔄 | Swap rubric for Claude (Haiku) behind the same interface · blind prompt · emergent bias visible in audit |
+| M5 — LLM screener | ✅ | Swap rubric for Claude (Haiku) behind the same interface · blind prompt · emergent bias visible in audit |
 | M6 — Pair comparison UI | ⬜ | Side-by-side counterfactual pairs showing identical résumés scored differently |
 | M7 — Methodology page | ⬜ | GitHub Pages explainer — statistical choices, regulatory citations, Bertrand-Mullainathan grounding |
 
-**223 tests passing, 0 failures.**
+**249 tests passing, 0 failures.**
 
 ---
 
 ## Stack
 
-- **Python 3.12** — FastAPI, uvicorn, pytest (223 tests), httpx
+- **Python 3.12** — FastAPI, uvicorn, pytest (249 tests), httpx
 - **Statistics** — Cohen's κ, Fleiss' κ, EEOC four-fifths ratio, counterfactual mean drift
 - **Frontend** — vanilla JS, GSAP 3 (hero animations, ScrollTrigger, mouse parallax), no framework
 - **Deploy** — Docker, Fly.io (`shared-cpu-1x`, 256 MB)
@@ -109,10 +122,16 @@ Any pair whose job-relevant hash differs is rejected before it enters the corpus
 | Source | Used for |
 |---|---|
 | SSA baby-name data (vendored sample) | First names → inferred gender |
-| US Census 2010 surname file (vendored sample) | Surnames → inferred race proxy |
+| US Census 2010 surname file (vendored sample) | Surnames → inferred race proxy (white/Black binary — for counterfactual drift only) |
 | Bertrand & Mullainathan (2004) name pairs | Counterfactual swaps — white- and Black-signal first names |
+| EEOC EEO-1 / tech-sector EEO-1 filings (public) | Calibration weights for synthetic self-reported race (eeo_race) |
 
-Names are proxies for inferred demographic signal, not identity. The generation method is committed to this repo so a reviewer can verify it is honest synthetic data, not scraped.
+**Two race fields, two purposes:**
+
+- `inferred_race_proxy` — name-inferred signal (white/Black), used only for counterfactual drift. Grounded in B-M. Binary by design — the B-M pairs are the axis.
+- `eeo_race` — synthetic self-reported EEO race (white/Black/Hispanic/Asian), assigned independently of name via a probability matrix calibrated to tech-sector EEO-1 demographics. This is what the four-fifths disparate impact check uses — the same basis real HR compliance uses. Asian engineers in tech often have Western first names (→ white proxy) but self-report Asian; the matrix models this realistically.
+
+Names and demographic fields are proxies for inferred signal, not real identity. The generation method is committed to this repo so a reviewer can verify it is honest synthetic data, not scraped.
 
 Hard rules: no "culture fit" scoring (discrimination vector). Screener scores against a fixed req-derived rubric only — never trained on past hires. That is the Amazon rule.
 

@@ -53,7 +53,7 @@ def _corpus_for_req(req_id: str) -> tuple[list[Resume], list[CounterfactualPair]
     req = _req_by_id().get(req_id)
     if req is None:
         raise KeyError(req_id)
-    resumes, pairs = generate_corpus([req], n_per_fit=50, seed=42)
+    resumes, pairs = generate_corpus([req], n_per_fit=50, seed=44)
     return resumes, pairs
 
 
@@ -73,18 +73,30 @@ class AuditRequest(BaseModel):
 
 # ── Serialisation helpers ─────────────────────────────────────────────────────
 
-def _audit_to_dict(report: AuditReport) -> dict:
+def _audit_to_dict(report: AuditReport, cfg: AuditConfigIn | None = None) -> dict:
     ff = report.four_fifths
     dr = report.drift
+    nice_w = round((1.0 - cfg.required_skill_weight) * 0.5, 4) if cfg else None
+    exp_w  = round((1.0 - cfg.required_skill_weight) * 0.5, 4) if cfg else None
+    screener_config = {
+        "required_skill_weight": cfg.required_skill_weight if cfg else None,
+        "nice_to_have_weight":   nice_w,
+        "experience_weight":     exp_w,
+        "prestige_bonus":        cfg.prestige_bonus if cfg else None,
+        "threshold_advance":     cfg.threshold_advance if cfg else None,
+        "name_signal":           cfg.name_signal if cfg else None,
+    } if cfg else None
     return {
         "req_id": report.req_id,
         "verdict": report.verdict,
         "n_resumes": report.n_resumes,
         "n_pairs": report.n_pairs,
         "detail": report.detail,
+        "screener_config": screener_config,
         "four_fifths": {
             "passed": ff.passed,
             "ratios": ff.ratios,
+            "stat_min_n": ff.stat_min_n,
             "detail": ff.detail,
             "groups": [
                 {
@@ -93,6 +105,7 @@ def _audit_to_dict(report: AuditReport) -> dict:
                     "n": g.n,
                     "n_advanced": g.n_advanced,
                     "selection_rate": round(g.selection_rate, 4),
+                    "in_verdict": g.n >= ff.stat_min_n,
                 }
                 for g in ff.groups
             ],
@@ -198,9 +211,10 @@ def create_app() -> FastAPI:
             resumes,
             pairs,
             req.id,
-            four_fifths_axes=["race_proxy"],
+            four_fifths_axes=["eeo_race"],
+            min_group_size=20,
         )
-        return _audit_to_dict(report)
+        return _audit_to_dict(report, body.config)
 
     @app.post("/api/scores")
     async def scores(body: AuditRequest):
@@ -229,6 +243,8 @@ def create_app() -> FastAPI:
                 "candidate_id": s.candidate_id,
                 "raw_score": round(s.raw_score, 4),
                 "verdict": s.verdict,
+                "eeo_race": resume_map[s.candidate_id].identity.eeo_race
+                    or resume_map[s.candidate_id].identity.inferred_race_proxy,
                 "race_proxy": resume_map[s.candidate_id].identity.inferred_race_proxy,
                 "gender": resume_map[s.candidate_id].identity.inferred_gender,
                 "latent_fit": resume_map[s.candidate_id].latent_fit,

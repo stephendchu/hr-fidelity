@@ -171,14 +171,14 @@ class TestRealismCheck:
 class TestCorpusGenerator:
     def test_resume_count(self, corpus):
         resumes, _ = corpus
-        # 4 reqs × 3 fit levels × 10 per fit = 120
-        assert len(resumes) == 120
+        # 5 reqs × 3 fit levels × 10 per fit = 150
+        assert len(resumes) == 150
 
     def test_fit_levels_balanced(self, corpus):
         resumes, _ = corpus
         from collections import Counter
         counts = Counter(r.latent_fit for r in resumes)
-        assert counts["strong"] == counts["medium"] == counts["weak"] == 40
+        assert counts["strong"] == counts["medium"] == counts["weak"] == 50
 
     def test_all_req_archetypes_represented(self, corpus):
         resumes, _ = corpus

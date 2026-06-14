@@ -23,10 +23,11 @@ from hrfidelity.data.schema import Education, Experience, Resume
 # ---------------------------------------------------------------------------
 
 _TITLES: dict[str, list[str]] = {
-    "backend-eng":   ["Software Engineer", "Senior Software Engineer", "Backend Developer", "Staff Engineer"],
-    "ml-researcher": ["ML Engineer", "Data Scientist", "Research Engineer", "ML Researcher"],
-    "infra-eng":     ["DevOps Engineer", "Infrastructure Engineer", "Site Reliability Engineer", "Platform Engineer"],
-    "recruiter":     ["Recruiter", "Talent Acquisition Specialist", "Senior Recruiter", "Recruiting Lead"],
+    "backend-eng":     ["Software Engineer", "Senior Software Engineer", "Backend Developer", "Staff Engineer"],
+    "fang-swe-nyc":   ["Software Engineer II", "Senior Software Engineer", "Staff Software Engineer", "Senior SWE"],
+    "ml-researcher":  ["ML Engineer", "Data Scientist", "Research Engineer", "ML Researcher"],
+    "infra-eng":      ["DevOps Engineer", "Infrastructure Engineer", "Site Reliability Engineer", "Platform Engineer"],
+    "recruiter":      ["Recruiter", "Talent Acquisition Specialist", "Senior Recruiter", "Recruiting Lead"],
 }
 _TITLES_DEFAULT = ["Analyst", "Specialist", "Associate", "Senior Associate"]
 
@@ -38,6 +39,7 @@ _COMPANIES = [
 
 _DEGREES: dict[str, list[tuple[str, str]]] = {
     "backend-eng":   [("BS", "Computer Science"), ("BS", "Software Engineering"), ("BA", "Computer Science")],
+    "fang-swe-nyc":  [("BS", "Computer Science"), ("MS", "Computer Science"), ("BS", "Electrical Engineering & CS"), ("MS", "Software Engineering")],
     "ml-researcher": [("MS", "Machine Learning"), ("PhD", "Computer Science"), ("BS", "Statistics"), ("MS", "Statistics")],
     "infra-eng":     [("BS", "Computer Science"), ("BS", "Information Technology"), ("AS", "Network Administration")],
     "recruiter":     [("BS", "Human Resources"), ("BA", "Psychology"), ("BS", "Business Administration"), ("BA", "Communications")],
@@ -116,7 +118,7 @@ def _generate_education(
     min_years_exp: int,
     rng: random.Random,
 ) -> list[Education]:
-    prestige_tier = rng.choice([1, 2, 3])
+    prestige_tier = rng.choices([1, 2, 3], weights=[0.15, 0.40, 0.45])[0]
     degree, field = rng.choice(_DEGREES.get(req_id, _DEGREES_DEFAULT))
     institution = rng.choice(_INSTITUTIONS[prestige_tier])
     grad_year = max(1990, 2024 - min_years_exp - rng.randint(0, 3) - 4)
@@ -139,15 +141,14 @@ def generate_resume(
     rng: random.Random,
     *,
     swappable_identity: bool = False,
+    identity_rng: random.Random | None = None,
 ) -> Resume:
     """Return one synthetic Resume conditioned on (req, latent_fit).
 
-    Identity is sampled after all job-relevant content is determined, using
-    the same rng — but its value is structurally independent of latent_fit
-    because sample_identity() ignores fit entirely.
-
-    Pass swappable_identity=True (corpus generator) to restrict names to those
-    that have a known swap partner on all counterfactual axes.
+    Content (skills, experience, education) is drawn from `rng`.
+    Identity is drawn from `identity_rng` when provided, otherwise from `rng`.
+    Callers that care about eeo_race being independent of latent_fit should
+    pass a separately-seeded identity_rng (see corpus_generator.generate_corpus).
     """
     band = getattr(req.true_rubric, latent_fit)
 
@@ -160,9 +161,9 @@ def generate_resume(
     experience = _generate_experience(req.id, band.min_years_exp, skills, rng)
     education = _generate_education(req.id, band.min_years_exp, rng)
 
-    # Identity sampled independently — never conditioned on latent_fit
+    _id_rng = identity_rng if identity_rng is not None else rng
     _sample = sample_swappable_identity if swappable_identity else sample_identity
-    identity = _sample(rng)
+    identity = _sample(_id_rng)
 
     return Resume(
         candidate_id=str(uuid.UUID(int=rng.getrandbits(128))),

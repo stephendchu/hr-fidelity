@@ -43,9 +43,18 @@ def _resume_to_dict(r: Resume) -> dict:
 
 
 def _resume_from_dict(d: dict) -> Resume:
+    id_data = d["identity"]
+    identity = Identity(
+        first_name=id_data["first_name"],
+        last_name=id_data["last_name"],
+        inferred_gender=id_data["inferred_gender"],
+        inferred_race_proxy=id_data["inferred_race_proxy"],
+        source=id_data["source"],
+        eeo_race=id_data.get("eeo_race", ""),
+    )
     return Resume(
         candidate_id=d["candidate_id"],
-        identity=Identity(**d["identity"]),
+        identity=identity,
         education=[Education(**e) for e in d["education"]],
         experience=[
             Experience(
@@ -91,18 +100,25 @@ def generate_corpus(
         axes = _AXES
 
     rng = random.Random(seed)
+    # Identity rng is separate so eeo_race never correlates with latent_fit via
+    # generation order.  Shuffling the fit sequence below achieves the same goal
+    # structurally, but the separate stream adds an extra layer of independence.
+    rng_id = random.Random(seed ^ 0xC0FFEE42)
     fits = ["strong", "medium", "weak"]
     resumes: list[Resume] = []
     pairs: list[CounterfactualPair] = []
 
     for req in reqs:
-        for fit in fits:
-            for _ in range(n_per_fit):
-                resume = generate_resume(req, fit, rng, swappable_identity=True)
-                resumes.append(resume)
-                for axis in axes:
-                    twin = generate_counterfactual(resume, axis=axis, rng=rng)
-                    pairs.append(CounterfactualPair(base=resume, twin=twin, axis=axis))
+        # Shuffle fit assignments so identity draws aren't phase-correlated
+        fit_seq = [fit for fit in fits for _ in range(n_per_fit)]
+        rng.shuffle(fit_seq)
+
+        for fit in fit_seq:
+            resume = generate_resume(req, fit, rng, swappable_identity=True, identity_rng=rng_id)
+            resumes.append(resume)
+            for axis in axes:
+                twin = generate_counterfactual(resume, axis=axis, rng=rng)
+                pairs.append(CounterfactualPair(base=resume, twin=twin, axis=axis))
 
     return resumes, pairs
 

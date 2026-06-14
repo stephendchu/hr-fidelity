@@ -4,672 +4,1161 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HR Fidelity — AI Screener Bias Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:      #111110;
-    --surface: #1c1c1a;
-    --border:  #2e2e2b;
-    --amber:   #d4a853;
-    --amber-d: #b8883a;
-    --text:    #e8e6e0;
-    --muted:   #7a7870;
-    --green:   #4caf7d;
-    --red:     #e05c5c;
-    --radius:  8px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f8f9fb; --surface:#fff; --border:#e8eaed;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-l:#eff6ff;
+  --dark:#1a1d23; --muted:#6b7280;
+  --green:#16a34a; --green-l:#dcfce7;
+  --red:#dc2626; --r:12px;
+}
+html { scroll-behavior: smooth; }
+body { background:var(--bg); color:var(--dark); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.6; overflow-x:hidden; }
 
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(17,17,16,.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
-    display: flex; align-items: center; gap: 2rem;
-    height: 56px;
-  }
-  .logo { font-weight: 700; font-size: 1.1rem; color: var(--amber); letter-spacing: -0.02em; }
-  .logo span { color: var(--text); }
-  nav a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .15s; }
-  nav a:hover { color: var(--text); }
+/* Nav */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(248,249,251,.9); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 2.5rem; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.nav-logo { font-weight:800; font-size:1.05rem; letter-spacing:-.02em; }
+.nav-logo span { color:var(--blue); }
+.nav-links { display:flex; align-items:center; gap:2rem; }
+.nav-links a { color:var(--muted); text-decoration:none; font-size:.875rem; font-weight:500; }
+.nav-links a:hover { color:var(--dark); }
+.nav-cta { background:var(--blue); color:#fff; border:none; border-radius:8px; padding:.45rem 1.1rem; font-size:.875rem; font-weight:600; cursor:pointer; }
+.nav-cta:hover { background:var(--blue-d); }
 
-  .hero {
-    max-width: 760px; margin: 0 auto;
-    padding: 5rem 2rem 3rem;
-    text-align: center;
-  }
-  .hero-tag {
-    display: inline-block;
-    background: rgba(212,168,83,.12);
-    color: var(--amber);
-    border: 1px solid rgba(212,168,83,.3);
-    border-radius: 99px;
-    padding: .25rem .9rem;
-    font-size: .8rem; font-weight: 600; letter-spacing: .04em;
-    margin-bottom: 1.5rem;
-    text-transform: uppercase;
-  }
-  h1 { font-size: 2.8rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 1.2rem; }
-  h1 em { color: var(--amber); font-style: normal; }
-  .hero p { color: var(--muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto 2rem; }
+/* Hero */
+.hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:7rem 2rem 5rem; text-align:center; position:relative; overflow:hidden; }
+.blob { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; will-change:transform; }
+.blob-1 { width:600px; height:600px; background:rgba(37,99,235,.08); top:-100px; left:-150px; }
+.blob-2 { width:500px; height:500px; background:rgba(16,163,74,.07); bottom:-80px; right:-80px; }
+.blob-3 { width:300px; height:300px; background:rgba(234,179,8,.06); top:30%; right:10%; }
+.float-card { position:absolute; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:.75rem 1rem; box-shadow:0 4px 20px rgba(0,0,0,.08); will-change:transform; pointer-events:none; opacity:0; }
+.fc-label { font-size:.7rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.2rem; }
+.fc-val   { font-size:1.25rem; font-weight:800; }
+.fc-sub   { font-size:.7rem; color:var(--muted); margin-top:.1rem; }
+.fc-cert  { top:22%; left:7%; }
+.fc-kappa { top:35%; right:8%; }
+.fc-drift { bottom:28%; left:9%; }
+.fc-ratio { bottom:32%; right:6%; }
+.hero-tag { display:inline-flex; align-items:center; gap:.4rem; background:var(--blue-l); color:var(--blue); border:1px solid rgba(37,99,235,.2); border-radius:99px; padding:.3rem 1rem; font-size:.78rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-bottom:1.75rem; opacity:0; }
+.hero-tag-dot { width:7px; height:7px; border-radius:50%; background:var(--blue); }
+h1 { font-size:clamp(2.4rem,5vw,3.6rem); font-weight:900; letter-spacing:-.04em; line-height:1.08; max-width:780px; margin-bottom:1.4rem; opacity:0; }
+h1 .accent { color:var(--blue); }
+.hero-sub { font-size:clamp(.95rem,1.5vw,1.1rem); color:var(--muted); max-width:560px; margin:0 auto 2.5rem; opacity:0; }
+.hero-actions { display:flex; align-items:center; gap:1rem; opacity:0; }
+.btn-primary { background:var(--blue); color:#fff; border:none; border-radius:10px; padding:.85rem 2rem; font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(37,99,235,.35); transition:background .15s,transform .1s; }
+.btn-primary:hover { background:var(--blue-d); transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--dark); border:1px solid var(--border); border-radius:10px; padding:.85rem 1.75rem; font-size:1rem; font-weight:600; cursor:pointer; transition:background .15s; }
+.btn-ghost:hover { background:var(--surface); }
+.scroll-hint { position:absolute; bottom:2.5rem; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:.35rem; color:var(--muted); font-size:.75rem; opacity:0; }
+.scroll-arrow { width:20px; height:20px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg); animation:bounce 1.8s ease-in-out infinite; }
+@keyframes bounce { 0%,100%{transform:rotate(45deg) translateY(0)} 50%{transform:rotate(45deg) translateY(5px)} }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-  .story {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--amber);
-    border-radius: var(--radius);
-    padding: 1.5rem 2rem;
-    max-width: 760px; margin: 0 auto 4rem;
-    font-size: .95rem;
-  }
-  .story p + p { margin-top: .7rem; }
+/* Stats strip */
+.stats-strip { background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:2rem; display:flex; justify-content:center; }
+.stat { text-align:center; padding:0 3rem; border-right:1px solid var(--border); }
+.stat:last-child { border-right:none; }
+.stat-num { font-size:2rem; font-weight:800; color:var(--blue); letter-spacing:-.03em; }
+.stat-lbl { font-size:.8rem; color:var(--muted); margin-top:.2rem; font-weight:500; }
 
-  .section { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4rem; }
-  .section-title {
-    font-size: 1.3rem; font-weight: 700;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: .6rem; margin-bottom: 1.5rem;
-  }
-  .section-title span { color: var(--amber); margin-right: .4rem; }
+/* Features */
+.features { max-width:1100px; margin:0 auto; padding:6rem 2rem; }
+.section-eyebrow { text-align:center; font-size:.8rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--blue); margin-bottom:1rem; }
+.section-title { text-align:center; font-size:clamp(1.8rem,3vw,2.4rem); font-weight:800; letter-spacing:-.03em; margin-bottom:.75rem; }
+.section-sub { text-align:center; color:var(--muted); font-size:.95rem; max-width:520px; margin:0 auto 3.5rem; }
+.feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){.feat-grid{grid-template-columns:1fr}}
+.feat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:1.75rem 1.6rem; box-shadow:0 1px 3px rgba(0,0,0,.04); opacity:0; transition:box-shadow .2s,transform .2s; }
+.feat-card:hover { box-shadow:0 8px 30px rgba(0,0,0,.1); transform:translateY(-3px); }
+.feat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:1rem; }
+.icon-blue{background:var(--blue-l)} .icon-green{background:#dcfce7} .icon-amber{background:#fef9c3}
+.feat-card h3 { font-size:1rem; font-weight:700; margin-bottom:.5rem; }
+.feat-card p  { font-size:.875rem; color:var(--muted); line-height:1.6; }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
-  }
-  .card + .card { margin-top: 1rem; }
+/* Story */
+.story-section { background:var(--dark); color:#f1f0ee; padding:5rem 2rem; }
+.story-inner { max-width:900px; margin:0 auto; }
+.story-section .section-eyebrow { color:#94a3b8; }
+.story-section .section-title { color:#f1f0ee; margin-bottom:2rem; }
+.story-body { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:center; }
+@media(max-width:700px){.story-body{grid-template-columns:1fr}}
+.story-text p { font-size:.95rem; color:#94a3b8; line-height:1.75; }
+.story-text p+p { margin-top:1rem; }
+.story-text strong { color:#f1f0ee; }
+.story-quote { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-left:3px solid var(--blue); border-radius:var(--r); padding:1.75rem; opacity:0; }
+.story-quote p { font-size:1rem; color:#e2e0d8; font-style:italic; line-height:1.7; }
+.story-quote cite { display:block; margin-top:.75rem; font-size:.8rem; color:#64748b; font-style:normal; }
 
-  .audit-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1.5rem;
-    align-items: start;
-  }
-  @media (max-width: 900px) { .audit-grid { grid-template-columns: 1fr; } }
+/* Audit section */
+.audit-section { max-width:1100px; margin:0 auto; padding:6rem 2rem; }
+.audit-grid { display:grid; grid-template-columns:300px 1fr; gap:1.5rem; align-items:start; }
+@media(max-width:900px){.audit-grid{grid-template-columns:1fr}}
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:1.4rem 1.6rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+.card+.card { margin-top:1rem; }
+.card-title { font-weight:700; font-size:.95rem; margin-bottom:1.1rem; }
+.ctrl { margin-bottom:1rem; }
+.ctrl label { display:block; font-size:.75rem; font-weight:600; color:var(--muted); margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.05em; }
+select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--dark); padding:.45rem .7rem; font-size:.9rem; }
+select:focus { outline:none; border-color:var(--blue); }
+.srow { display:flex; align-items:center; gap:.6rem; }
+input[type=range] { width:100%; -webkit-appearance:none; height:4px; background:var(--border); border-radius:99px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:var(--blue); border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--blue); }
+.sv { min-width:34px; text-align:right; font-size:.82rem; font-weight:700; color:var(--blue); }
+.trow { display:flex; align-items:center; gap:.6rem; font-size:.9rem; color:#374151; cursor:pointer; }
+.tog { position:relative; width:40px; height:22px; }
+.tog input { opacity:0; width:0; height:0; }
+.tog-t { position:absolute; inset:0; background:var(--border); border-radius:99px; transition:background .2s; }
+.tog input:checked~.tog-t { background:var(--blue); }
+.tog-th { position:absolute; width:16px; height:16px; top:3px; left:3px; background:#fff; border-radius:50%; transition:transform .2s; pointer-events:none; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.tog input:checked~.tog-th { transform:translateX(18px); }
+.run-btn { width:100%; background:var(--blue); color:#fff; border:none; border-radius:8px; padding:.7rem; font-size:.95rem; font-weight:700; cursor:pointer; margin-top:1rem; box-shadow:0 2px 8px rgba(37,99,235,.3); transition:background .15s; }
+.run-btn:hover { background:var(--blue-d); }
+.run-btn:disabled { opacity:.5; cursor:not-allowed; }
 
-  .control-group { margin-bottom: 1.2rem; }
-  .control-group:last-child { margin-bottom: 0; }
-  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: .45rem; }
+/* Result cards */
+.v-banner { background:var(--green-l); border:1px solid #bbf7d0; border-radius:var(--r); padding:1.2rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+.v-banner.blocked { background:#fef2f2; border-color:#fecaca; }
+.v-label { font-size:.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.25rem; }
+.v-main  { font-size:1.1rem; font-weight:800; color:var(--green); }
+.v-main.blocked { color:var(--red); }
+.v-sub   { font-size:.8rem; color:var(--muted); margin-top:.15rem; }
+.v-badge { background:var(--green); color:#fff; border-radius:99px; padding:.35rem 1rem; font-size:.8rem; font-weight:700; display:flex; align-items:center; gap:.35rem; }
+.v-badge.blocked { background:var(--red); }
+.exec-summary { border-radius:var(--r); border:1px solid; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.exec-summary.certified { background:#f0fdf4; border-color:#bbf7d0; }
+.exec-summary.blocked   { background:#fff8f1; border-color:#fed7aa; }
+.exec-summary h4 { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem; }
+.exec-summary.certified h4 { color:#15803d; }
+.exec-summary.blocked   h4 { color:#c2410c; }
+.exec-summary p { font-size:.9rem; color:#374151; line-height:1.7; margin-bottom:.5rem; }
+.exec-summary p:last-child { margin-bottom:0; }
+.vd { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.7); }
+.pass-pill { background:#dcfce7; color:#16a34a; border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
+.fail-pill { background:#fee2e2; color:var(--red); border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
+.warn-pill { background:#fef3c7; color:#92400e; border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
+.ch { display:flex; align-items:center; justify-content:space-between; margin-bottom:.65rem; }
+.ch h3 { font-size:.95rem; font-weight:700; }
+.sub-t { font-size:.76rem; color:#9ca3af; margin-bottom:.5rem; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:.72rem; font-weight:600; color:#9ca3af; padding-bottom:.3rem; border-bottom:1px solid #f3f4f6; text-transform:uppercase; letter-spacing:.04em; }
+td { padding:.3rem 0; font-size:.85rem; border-bottom:1px solid #f9fafb; }
+tr:last-child td { border-bottom:none; }
+.bw { background:#f3f4f6; border-radius:99px; height:7px; overflow:hidden; min-width:60px; }
+.bf { height:100%; background:#22c55e; border-radius:99px; }
+.bf.fail { background:#ef4444; }
+.nut { text-align:right; }
+.gn { color:#16a34a; font-weight:600; }
+.rd { color:var(--red); font-weight:600; }
+.kg { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin:.65rem 0; }
+.ks { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:.65rem .5rem; text-align:center; }
+.kn { font-size:1.5rem; font-weight:800; color:var(--blue); }
+.kl { font-size:.68rem; color:#9ca3af; margin-top:.1rem; }
+.kbw { height:6px; background:var(--border); border-radius:99px; margin:.6rem 0 .35rem; overflow:hidden; }
+.kbf { height:100%; background:var(--blue); border-radius:99px; }
+.ka { display:flex; justify-content:space-between; font-size:.68rem; color:#9ca3af; }
+.ka .t { color:var(--blue); font-weight:600; }
 
-  select { width: 100%; }
-  select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    padding: .55rem .75rem;
-    font-size: .95rem;
-    cursor: pointer;
-  }
-  select:focus { outline: none; border-color: var(--amber); }
+/* Verdict hero banner */
+.verdict-hero{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;border-radius:var(--r);margin-bottom:1.5rem;border:1px solid;flex-wrap:wrap;gap:1rem}
+.verdict-hero.certified{background:#f0fdf4;border-color:#bbf7d0}
+.verdict-hero.blocked{background:#fef2f2;border-color:#fecaca}
+.vh-metrics{display:flex;gap:2rem;flex-shrink:0}
+.vh-metric{text-align:center}
+.vh-num{font-size:1.5rem;font-weight:800;line-height:1}
+.vh-lbl{font-size:.68rem;color:#6b7280;margin-top:.2rem;font-weight:500}
+.vh-req{font-size:.65rem;color:#9ca3af;margin-top:.1rem}
+.vh-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:99px;padding:.5rem 1.4rem;font-size:.9rem;font-weight:700;letter-spacing:.04em;flex-shrink:0}
 
-  .slider-row { display: flex; align-items: center; gap: .75rem; }
-  .slider-val { min-width: 38px; text-align: right; font-size: .85rem; font-weight: 600; color: var(--amber); }
-  input[type=range] {
-    width: 100%;
-    -webkit-appearance: none;
-    height: 4px; background: var(--border); border-radius: 99px; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px; height: 16px;
-    background: var(--amber);
-    border-radius: 50%;
-    border: 2px solid var(--bg);
-  }
+/* CTA */
+.cta-section { position:relative; overflow:hidden; padding:7rem 2rem; text-align:center; background:var(--surface); border-top:1px solid var(--border); }
+.cta-glow { position:absolute; width:700px; height:700px; background:radial-gradient(circle,rgba(37,99,235,.12) 0%,transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+.cta-section h2 { font-size:clamp(2rem,3.5vw,2.8rem); font-weight:900; letter-spacing:-.04em; margin-bottom:1rem; position:relative; opacity:0; }
+.cta-section p  { color:var(--muted); font-size:1rem; max-width:480px; margin:0 auto 2.5rem; position:relative; opacity:0; }
+.cta-actions { position:relative; display:flex; align-items:center; gap:1rem; justify-content:center; opacity:0; }
+.disclosure-note { position:relative; display:flex; align-items:center; gap:.5rem; justify-content:center; margin-top:1.5rem; font-size:.8rem; color:#9ca3af; }
 
-  .toggle-row { display: flex; align-items: center; gap: .75rem; cursor: pointer; }
-  .toggle { position: relative; width: 40px; height: 22px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-track {
-    position: absolute; inset: 0;
-    background: var(--border); border-radius: 99px;
-    transition: background .2s; cursor: pointer;
-  }
-  .toggle input:checked ~ .toggle-track { background: var(--amber); }
-  .toggle-thumb {
-    position: absolute;
-    width: 16px; height: 16px; top: 3px; left: 3px;
-    background: #fff; border-radius: 50%;
-    transition: transform .2s; pointer-events: none;
-  }
-  .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+/* Regulatory badge strip */
+.reg-strip { background:var(--dark); border-top:1px solid rgba(255,255,255,.06); padding:1.75rem 2rem; text-align:center; }
+.reg-strip-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#4b5563; margin-bottom:.85rem; }
+.reg-badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.6rem; }
+.reg-badge { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(255,255,255,.1); border-radius:99px; padding:.3rem .85rem; font-size:.75rem; color:#9ca3af; font-weight:500; }
+.reg-badge svg { flex-shrink:0; opacity:.6; }
 
-  .run-btn {
-    width: 100%;
-    background: var(--amber); color: #111;
-    border: none; border-radius: 6px;
-    padding: .7rem 1rem;
-    font-size: .95rem; font-weight: 700;
-    cursor: pointer; margin-top: 1.25rem;
-    transition: background .15s, transform .1s;
-  }
-  .run-btn:hover { background: var(--amber-d); }
-  .run-btn:active { transform: scale(.98); }
-  .run-btn:disabled { opacity: .45; cursor: not-allowed; }
+/* Footer */
+footer { background:var(--dark); color:#6b7280; padding:1.5rem 2rem; text-align:center; font-size:.8rem; border-top:1px solid rgba(255,255,255,.05); }
+footer a { color:#94a3b8; text-decoration:none; }
 
-  .verdict-badge {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .4rem 1rem;
-    border-radius: 99px;
-    font-size: .85rem; font-weight: 700; letter-spacing: .06em;
-    text-transform: uppercase;
-  }
-  .verdict-badge.certified { background: rgba(76,175,125,.15); color: var(--green); border: 1px solid rgba(76,175,125,.3); }
-  .verdict-badge.blocked   { background: rgba(224,92,92,.15);  color: var(--red);   border: 1px solid rgba(224,92,92,.3); }
-  .verdict-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+/* Candidate pool dots */
+.pool-dot{width:12px;height:12px;border-radius:50%;transition:opacity .25s,transform .25s;cursor:default;flex-shrink:0}
 
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: .78rem; font-weight: 600; color: var(--muted); padding-bottom: .4rem; }
-  td { padding: .35rem 0; font-size: .88rem; vertical-align: middle; }
+/* Slider description */
+.slider-desc{font-size:.74rem;color:#9ca3af;margin-top:.35rem;min-height:1.1em;transition:color .15s}
+.slider-desc.warn{color:#b45309}
+.slider-desc.danger{color:#dc2626}
 
-  .bar-wrap { background: var(--bg); border-radius: 99px; height: 8px; min-width: 60px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
-  .bar-fill.pass { background: var(--green); }
-  .bar-fill.fail { background: var(--red); }
+/* How-to steps */
+.how-steps{display:flex;flex-direction:column;gap:1.75rem}
+.how-step{display:flex;gap:1.25rem;align-items:flex-start}
+.how-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:.1rem}
+.how-title{font-size:.95rem;font-weight:700;margin-bottom:.35rem}
+.how-body{font-size:.875rem;color:#374151;line-height:1.65}
+.how-body strong{color:var(--dark)}
 
-  .drift-tbl td { border-bottom: 1px solid rgba(255,255,255,.04); }
-  .drift-tbl tr:last-child td { border-bottom: none; }
-  .drift-tbl th { border-bottom: 1px solid var(--border); }
-  .drift-tbl td:not(:first-child) { text-align: right; }
+/* Scope grid (replaces inline style for responsive override) */
+.scope-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto; }
 
-  .kappa-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-top: .75rem; }
-  .kappa-stat { text-align: center; }
-  .kappa-num { font-size: 2rem; font-weight: 800; color: var(--amber); }
-  .kappa-lbl { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
-  .kappa-bar-wrap { height: 10px; background: var(--bg); border-radius: 99px; margin: 1rem 0 .5rem; overflow: hidden; }
-  .kappa-bar-fill { height: 100%; border-radius: 99px; background: var(--amber); transition: width .7s ease; }
-  .kappa-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
-  .threshold-label { color: var(--amber); font-size: .72rem; font-weight: 600; }
+/* Info modal */
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.72rem;font-weight:700;border:none;cursor:pointer;line-height:1;vertical-align:middle;margin-left:.4rem;flex-shrink:0;transition:background .15s;
+  /* expand tap target without changing visual size */
+  position:relative}
+.info-btn::before{content:'';position:absolute;inset:-10px}
+.info-btn:hover{background:#d1d5db;color:var(--dark)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:16px;padding:2rem 2rem 1.75rem;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.18);position:relative;transform:translateY(12px);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--border);border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#d1d5db}
+.modal-tag{display:inline-block;background:#fef3c7;color:#92400e;border-radius:99px;padding:.2rem .75rem;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1rem}
+.modal-box h3{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem}
+.modal-box p{font-size:.9rem;color:#374151;line-height:1.65;margin-bottom:.75rem}
+.modal-box p:last-of-type{margin-bottom:0}
+.modal-example{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#7f1d1d;line-height:1.6}
+.modal-example strong{color:#991b1b}
+.modal-verdict{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#14532d;line-height:1.6}
+/* Bottom sheet on mobile */
+@media(max-width:640px){
+  .modal-overlay{align-items:flex-end;padding:0}
+  .modal-box{border-radius:20px 20px 0 0;max-width:100%;max-height:85vh;padding:1.5rem 1.25rem 2rem}
+  .modal-close{width:40px;height:40px;font-size:1.1rem}
+}
 
-  .explainer { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
-  @media (max-width: 700px) { .explainer { grid-template-columns: 1fr; } }
-  .explainer-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem 1.3rem; }
-  .explainer-icon { font-size: 1.4rem; margin-bottom: .6rem; }
-  .explainer-item h3 { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
-  .explainer-item p { font-size: .82rem; color: var(--muted); }
+/* ── Mobile (≤640px) ── */
+@media(max-width:640px){
+  nav { padding:0 1rem; }
+  .nav-links { display:none; }
+  .float-card { display:none; }
+  .hero { padding:5.5rem 1.25rem 3.5rem; }
+  .hero-actions { flex-wrap:wrap; justify-content:stretch; }
+  .hero-actions .btn-primary, .hero-actions .btn-ghost { width:100%; text-align:center; }
+  .stats-strip { flex-wrap:wrap; }
+  .stat { padding:.75rem 0; width:50%; border-right:none; border-bottom:1px solid var(--border); }
+  .stat:nth-child(odd) { border-right:1px solid var(--border); }
+  .stat:nth-last-child(-n+2) { border-bottom:none; }
+  .features { padding:3rem 1.25rem; }
+  .story-section { padding:3rem 1.25rem; }
+  .audit-section { padding:3rem 1rem; }
+  .scope-grid { grid-template-columns:1fr; gap:1.75rem; }
+  .verdict-hero { flex-direction:column; align-items:flex-start; }
+  .vh-metrics { width:100%; justify-content:space-between; }
+  .kg { grid-template-columns:1fr 1fr; }
+  table { display:block; overflow-x:auto; }
+  .cta-section { padding:4rem 1.25rem; }
+  .cta-actions { flex-direction:column; align-items:stretch; }
+  .cta-actions .btn-primary, .cta-actions .btn-ghost { width:100%; text-align:center; }
+}
 
-  .disclosure {
-    background: rgba(212,168,83,.06);
-    border: 1px solid rgba(212,168,83,.2);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    font-size: .83rem; color: var(--muted);
-    display: flex; gap: .75rem; align-items: flex-start;
-    max-width: 1100px; margin: 0 auto 2rem;
-  }
-
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 2rem; text-align: center;
-    font-size: .8rem; color: var(--muted);
-  }
-
-  .placeholder { padding: 3rem 2rem; text-align: center; color: var(--muted); }
-  .spinner {
-    display: block; width: 24px; height: 24px;
-    border: 3px solid var(--border); border-top-color: var(--amber);
-    border-radius: 50%; animation: spin .7s linear infinite;
-    margin: 0 auto 1rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .fade-in { animation: fadeIn .35s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-
-  .row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .9rem; }
-  .row-header h3 { font-size: 1rem; font-weight: 700; }
-  .pass-label { font-size: .85rem; font-weight: 700; color: var(--green); }
-  .fail-label { font-size: .85rem; font-weight: 700; color: var(--red); }
-  .sub { font-size: .78rem; color: var(--muted); margin-bottom: .5rem; }
-  .meta-row { display: flex; gap: 2rem; margin-top: 1rem; font-size: .82rem; color: var(--muted); }
-  .meta-row strong { color: var(--text); }
+/* Data note */
+.data-note { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:.75rem 1.1rem; font-size:.8rem; color:#92400e; display:flex; align-items:flex-start; gap:.6rem; margin-bottom:1.5rem; }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="logo">HR<span>Fidelity</span></div>
-  <a href="#how-it-works">How it works</a>
-  <a href="#audit">Audit</a>
-  <a href="#fidelity">Fidelity</a>
+  <div class="nav-logo">HR<span>Fidelity</span></div>
+  <div class="nav-links">
+    <a href="#how-it-works">How it works</a>
+    <a href="#audit">Live audit</a>
+    <a href="#audit">Fidelity</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Try the audit</button>
 </nav>
 
-<div class="hero">
-  <div class="hero-tag">AI Resume Screening Audit</div>
-  <h1>Does your AI screener<br>pick resumes <em>fairly</em>?</h1>
-  <p>HR Fidelity runs three independent checks — disparate impact, counterfactual drift, and recruiter-AI agreement — to certify or block your screener before it touches a single live application.</p>
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="blob blob-1" data-depth="0.15"></div>
+  <div class="blob blob-2" data-depth="0.10"></div>
+  <div class="blob blob-3" data-depth="0.20"></div>
+
+  <div class="float-card fc-cert" data-depth="0.25">
+    <div class="fc-label">Verdict</div>
+    <div class="fc-val" style="color:#16a34a">✓ CERTIFIED</div>
+    <div class="fc-sub">All checks passed</div>
+  </div>
+  <div class="float-card fc-kappa" data-depth="0.18">
+    <div class="fc-label">Mean κ (AI vs recruiter)</div>
+    <div class="fc-val" style="color:#2563eb">0.773</div>
+    <div class="fc-sub">Substantial agreement</div>
+  </div>
+  <div class="float-card fc-drift" data-depth="0.30">
+    <div class="fc-label">Counterfactual drift</div>
+    <div class="fc-val" style="color:#16a34a">0.000</div>
+    <div class="fc-sub">Zero proxy bias detected</div>
+  </div>
+  <div class="float-card fc-ratio" data-depth="0.22">
+    <div class="fc-label">Min 4/5 ratio</div>
+    <div class="fc-val" style="color:#16a34a">1.00</div>
+    <div class="fc-sub">All groups above 0.80</div>
+  </div>
+
+  <div class="hero-tag"><div class="hero-tag-dot"></div>AI Resume Screening Audit</div>
+  <h1>Audit your AI screener for<br><span class="accent">name-proxy and prestige bias</span><br>before it sees one résumé</h1>
+  <p class="hero-sub">Three independent checks — disparate impact, counterfactual drift, and recruiter–AI agreement — certify or block your screener. Every metric is reproducible and audit-ready.</p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Run a live audit</button>
+    <button class="btn-ghost"   onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">See how it works</button>
+  </div>
+  <div class="scroll-hint"><div class="scroll-arrow"></div></div>
+</section>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="stat"><div class="stat-num">3</div><div class="stat-lbl">Independent bias checks</div></div>
+  <div class="stat"><div class="stat-num">450+</div><div class="stat-lbl">Counterfactual pairs per req</div></div>
+  <div class="stat"><div class="stat-num">0.80</div><div class="stat-lbl">EEOC four-fifths threshold</div></div>
+  <div class="stat"><div class="stat-num">0.60</div><div class="stat-lbl">κ threshold for certification</div></div>
 </div>
 
-<div class="story">
-  <p><strong style="color:var(--amber)">Why this matters:</strong> In 2018 Amazon discovered its ML hiring tool had learned to penalize résumés containing the word "women's" and downgraded graduates of all-women's colleges. The system was trained on ten years of hiring data — data that reflected a historically male engineering workforce. It was shut down before deployment, but the pattern repeats industry-wide.</p>
-  <p>HR Fidelity audits screeners <em>before</em> data like that can take hold. Every metric is computed on <strong>synthetic, public-domain data</strong> — no real candidates, no employer artifacts.</p>
-</div>
+<!-- Features -->
+<section class="features" id="how-it-works">
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">Three layers. One verdict.</h2>
+  <p class="section-sub">HR Fidelity runs every screener through the same gauntlet regulators use, then issues a machine-readable certificate.</p>
+  <div class="feat-grid">
+    <div class="feat-card"><div class="feat-icon icon-blue">⚖️</div><h3>Four-fifths disparate impact</h3><p>EEOC § 60-3.4 / NYC Local Law 144: any group selected at less than 80% of the top group's rate triggers a violation. Computed across name-based race signal and gender before any hire.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-green">🔀</div><h3>Counterfactual drift</h3><p>Every résumé gets a matched twin — identical content, one proxy signal swapped. If mean score drift exceeds 5%, the screener is blocked. No bias hides in identical pairs.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-amber">📏</div><h3>Recruiter–AI calibration (κ)</h3><p>Cohen's κ measures whether the AI and human recruiters agree on A/B pairs. κ ≥ 0.60 — "substantial" agreement — is required. Gold pairs act as attention checks.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-blue">🔒</div><h3>Synthetic-only data</h3><p>All résumés are 100% synthetic. Names from Bertrand-Mullainathan, SSA, and Census public datasets. No real candidates, no employer hiring records, no privacy risk.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-green">📋</div><h3>Rubric-only scoring</h3><p>Screeners score against a fixed job-derived rubric — never trained on past hires. This is the Amazon rule: historical data encodes historical bias.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-amber">⚡</div><h3>Live configuration knobs</h3><p>Toggle prestige bonuses, name signals, and skill weights in real time. Watch the verdict flip from BLOCKED to CERTIFIED as you remove bias vectors.</p></div>
+  </div>
+</section>
 
-<section class="section" id="how-it-works">
-  <div class="section-title"><span>01</span> How it works</div>
-  <div class="explainer">
-    <div class="explainer-item">
-      <div class="explainer-icon">⚖️</div>
-      <h3>Four-fifths disparate impact</h3>
-      <p>EEOC / NYC Local Law 144 standard: any demographic group selected at less than 80 % of the top group's rate triggers a violation.</p>
-    </div>
-    <div class="explainer-item">
-      <div class="explainer-icon">🔀</div>
-      <h3>Counterfactual drift</h3>
-      <p>Each résumé is paired with an identical twin where only one proxy signal changes (name, institution tier). Mean score drift &gt; 5 % blocks certification.</p>
-    </div>
-    <div class="explainer-item">
-      <div class="explainer-icon">📏</div>
-      <h3>Recruiter–AI agreement (κ)</h3>
-      <p>Cohen's κ measures whether the AI and human recruiters agree on A/B pairs. κ ≥ 0.60 ("substantial") is required to pass fidelity calibration.</p>
+<!-- Story -->
+<section class="story-section">
+  <div class="story-inner">
+    <div class="section-eyebrow">Why this matters</div>
+    <h2 class="section-title">The Amazon problem repeats itself</h2>
+    <div class="story-body">
+      <div class="story-text">
+        <p>In 2018, Amazon discovered its ML hiring tool had learned to <strong>penalize résumés containing the word "women's"</strong> and downgraded graduates of all-women's colleges. The system was trained on ten years of hiring decisions — data that reflected a historically male engineering workforce.</p>
+        <p>It was shut down before deployment. But the pattern didn't stop at Amazon. Any screener trained on past hires inherits past bias. <strong>HR Fidelity audits before the screener ever sees a live application.</strong></p>
+      </div>
+      <div class="story-quote">
+        <p>Amazon's system learned to penalize résumés that mentioned women's organizations and downgraded graduates of women's colleges — a direct consequence of training on a decade of hiring decisions made by a male-dominated workforce.</p>
+        <cite>— Based on Amazon's internal audit findings, reported 2018</cite>
+      </div>
     </div>
   </div>
 </section>
 
-<div class="disclosure">
-  <span style="font-size:1.1rem;flex-shrink:0;">🔒</span>
-  <div>
-    <strong>Data disclosure</strong> — All résumés are 100 % synthetic. Names are sampled from SSA/Census/Bertrand-Mullainathan public datasets.
-    No real candidate data, no employer hiring records. Every metric is recomputable from the open-source corpus generator.
+<!-- Scope / Limitations -->
+<section style="background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2.5rem 2rem">
+  <div class="scope-grid">
+    <div>
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">What this audit covers</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Name-proxy bias — Bertrand-Mullainathan race-signal first names</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Institution prestige-tier bias — elite vs regional school weighting</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> Gender-signal bias from name-based proxies</li>
+        <li style="font-size:.875rem;color:#374151;display:flex;gap:.6rem"><span style="color:#16a34a;font-weight:700">✓</span> EEOC four-fifths disparate impact across demographic groups</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin-bottom:.75rem">What it doesn't claim</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:.5rem">
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Zip code, address, or neighbourhood correlates</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Employment gap or career-path patterns</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Résumé phrasing that encodes demographic signal</li>
+        <li style="font-size:.875rem;color:#6b7280;display:flex;gap:.6rem"><span style="font-weight:700">—</span> Bias learned from real historical training data</li>
+      </ul>
+    </div>
   </div>
-</div>
+</section>
 
-<section class="section" id="audit">
-  <div class="section-title"><span>02</span> Live bias audit</div>
+<!-- How to use -->
+<section style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:3.5rem 2rem">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="section-eyebrow" style="text-align:left">How recruiters use this</div>
+    <h2 style="font-size:clamp(1.5rem,2.5vw,2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:2rem">Three steps to a compliance-ready audit</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div>
+          <div class="how-title">Run the default audit</div>
+          <p class="how-body">Leave all knobs at their defaults and click <strong>Run audit</strong>. You'll see <strong>CERTIFIED</strong> — the screener is scoring on qualifications only, selection rates are even across groups, and it agrees with human recruiters. This is your baseline: a fair screener.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div>
+          <div class="how-title">Turn on name-based signals</div>
+          <p class="how-body">Toggle <strong>Name-based signals</strong> on and run again. The verdict flips to <strong>BLOCKED</strong>. The screener is now using applicant names as a proxy for race and gender — and the four-fifths ratios show it. Black and Hispanic applicants are advancing at less than 80% the rate of white applicants. That's an EEOC violation.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div>
+          <div class="how-title">Tune your screener's configuration</div>
+          <p class="how-body">Try raising the <strong>Prestige bonus</strong> slider. Even without name signals, favouring elite-school graduates introduces proxy correlation — and the counterfactual drift check catches it. The knobs represent real configuration choices your AI vendor offers. The audit tells you which combinations are legally safe before a single real applicant is touched.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:2rem;padding:1rem 1.25rem;background:var(--blue-l);border:1px solid rgba(37,99,235,.2);border-radius:10px;font-size:.875rem;color:#1e40af;line-height:1.6">
+      <strong>The output is your compliance artifact.</strong> The CERTIFIED/BLOCKED verdict, the four-fifths ratios, and the drift measurements are exactly what NYC Local Law 144 requires you to document before deploying an automated hiring tool. Run this before the screener touches a live application — not after.
+    </div>
+  </div>
+</section>
+
+<!-- Live Audit -->
+<section class="audit-section" id="audit">
+  <div class="section-eyebrow">Live demo</div>
+  <h2 class="section-title" style="margin-bottom:.5rem">Try it yourself</h2>
+  <p class="section-sub" style="margin-bottom:1.5rem">Start with defaults → Run audit → then toggle name-based signals and watch the verdict flip.</p>
+
+  <div class="data-note">
+    🔒 <span><strong>Synthetic data only</strong> — résumés generated from public name datasets. No real candidates. No employer records.</span>
+  </div>
+
+  <div id="verdict-hero" class="verdict-hero" style="display:none">
+    <div>
+      <div style="font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem">Audit verdict</div>
+      <div id="vh-verdict" style="font-size:1.6rem;font-weight:900;letter-spacing:-.03em"></div>
+      <div id="vh-sub" style="font-size:.85rem;color:#6b7280;margin-top:.25rem"></div>
+    </div>
+    <div class="vh-metrics">
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-ratio"></div>
+        <div class="vh-lbl" id="vh-ratio-lbl">Disparate impact ratio</div>
+        <div class="vh-req">Required ≥ 0.80</div>
+      </div>
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-drift"></div>
+        <div class="vh-lbl">Max score drift</div>
+        <div class="vh-req">Required ≤ 0.05</div>
+      </div>
+      <div class="vh-metric">
+        <div class="vh-num" id="vh-kappa"></div>
+        <div class="vh-lbl">Recruiter agreement κ</div>
+        <div class="vh-req">Required ≥ 0.60</div>
+      </div>
+    </div>
+    <div class="vh-badge" id="vh-badge"></div>
+  </div>
+
   <div class="audit-grid">
     <div class="card">
-      <div style="font-weight:700;margin-bottom:1.2rem;">Screener configuration</div>
-
-      <div class="control-group">
+      <div class="card-title">Screener configuration</div>
+      <div class="ctrl">
         <label for="req-select">Job requisition</label>
         <select id="req-select"></select>
       </div>
-
-      <div class="control-group">
-        <label for="prestige-bonus">Prestige bonus <small style="color:var(--muted);font-weight:400;">(elite school weight)</small></label>
-        <div class="slider-row">
-          <input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0">
-          <span class="slider-val" id="prestige-bonus-val">0.00</span>
-        </div>
+      <div class="ctrl">
+        <label for="prestige-bonus" style="display:flex;align-items:center">Prestige bonus <button class="info-btn" onclick="document.getElementById('prestige-modal').classList.add('open')" aria-label="What is prestige bonus?">?</button></label>
+        <div class="srow"><input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0"><span class="sv" id="prestige-bonus-val">0.00</span></div>
+        <div id="prestige-bonus-desc" class="slider-desc">No prestige weighting — all institutions scored equally</div>
       </div>
-
-      <div class="control-group">
-        <label for="skills-weight">Skills weight</label>
-        <div class="slider-row">
-          <input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6">
-          <span class="slider-val" id="skills-weight-val">0.60</span>
-        </div>
+      <div class="ctrl">
+        <label for="skills-weight" style="display:flex;align-items:center">Skills weight <button class="info-btn" onclick="document.getElementById('skills-modal').classList.add('open')" aria-label="What is skills weight?">?</button></label>
+        <div class="srow"><input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
+        <div id="skills-weight-desc" class="slider-desc">Balanced — skills and experience weighted equally</div>
       </div>
-
-      <div class="control-group">
-        <label for="advance-threshold">Advance threshold</label>
-        <div class="slider-row">
-          <input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7">
-          <span class="slider-val" id="advance-threshold-val">0.70</span>
-        </div>
+      <div class="ctrl">
+        <label for="advance-threshold" style="display:flex;align-items:center">Advance threshold <button class="info-btn" onclick="document.getElementById('threshold-modal').classList.add('open')" aria-label="What is advance threshold?">?</button></label>
+        <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
+        <div id="advance-threshold-desc" class="slider-desc">Standard bar — top 30% of qualified candidates advance</div>
       </div>
-
-      <div class="control-group">
-        <label>Name-based signals</label>
-        <label class="toggle-row" style="font-weight:400;color:var(--text);font-size:.9rem;cursor:pointer;">
-          <div class="toggle">
-            <input type="checkbox" id="name-signal">
-            <div class="toggle-track"></div>
-            <div class="toggle-thumb"></div>
-          </div>
+      <div class="ctrl">
+        <label style="display:flex;align-items:center">Name-based signals <button class="info-btn" onclick="document.getElementById('name-signal-modal').classList.add('open')" aria-label="What are name-based signals?">?</button></label>
+        <label class="trow">
+          <div class="tog"><input type="checkbox" id="name-signal"><div class="tog-t"></div><div class="tog-th"></div></div>
           <span id="name-signal-label">Off — screener cannot see names</span>
         </label>
-        <div id="name-signal-hint" style="font-size:.78rem;color:var(--muted);margin-top:.5rem;">
-          Turning this on simulates a screener that implicitly uses race/gender proxies from applicant names.
-        </div>
+        <div id="name-signal-hint" style="font-size:.76rem;color:#9ca3af;margin-top:.4rem">Simulates a screener using applicant names to infer race and gender signals.</div>
       </div>
-
-      <button class="run-btn" id="run-audit-btn" onclick="runAudit()">Run audit</button>
+      <button class="run-btn" id="run-btn" onclick="runAudit()">Run audit</button>
     </div>
-
-    <div id="audit-results-panel">
-      <div class="card placeholder">
-        Configure your screener and click <strong>Run audit</strong> to see results.
-      </div>
+    <div id="results-panel">
+      <div class="card" style="text-align:center;padding:3rem;color:#9ca3af">Configure your screener and click <strong style="color:var(--dark)">Run audit</strong> to see results.</div>
     </div>
   </div>
 </section>
 
-<section class="section" id="fidelity">
-  <div class="section-title"><span>03</span> Recruiter calibration (fidelity)</div>
-  <div id="fidelity-panel">
-    <div class="card placeholder">Fidelity loads after you run an audit.</div>
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2>Your screener. Audit-ready.<br>Before a single hire.</h2>
+  <p>HR Fidelity gives you the audit trail that legal, compliance, and regulators expect — built on open, reproducible methodology.</p>
+  <div class="cta-actions">
+    <button class="btn-primary" onclick="document.getElementById('audit').scrollIntoView({behavior:'smooth'})">Run your audit now</button>
+    <button class="btn-ghost" onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">Read the methodology</button>
   </div>
+  <div class="disclosure-note">🔒 All data is synthetic · No employer records used · Open-source corpus</div>
 </section>
 
-<footer>
-  Built with synthetic data only &mdash; no real candidates. &nbsp;&middot;&nbsp; HR Fidelity v0.1
-</footer>
+<div class="reg-strip">
+  <div class="reg-strip-label">Regulatory Frameworks Referenced</div>
+  <div class="reg-badges">
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      EEOC Uniform Guidelines — Four-Fifths Rule
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      NYC Local Law 144 (2023)
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      California FEHA / CRD AI Employment Guidance
+    </span>
+    <span class="reg-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
+      EU AI Act — High-Risk Employment Systems
+    </span>
+  </div>
+</div>
+<footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
 
+<!-- Four-fifths modal -->
+<div class="modal-overlay" id="fourfifths-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('fourfifths-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Legal standard</div>
+    <h3>What is Four-fifths disparate impact?</h3>
+    <p>The four-fifths rule is the legal test used by the EEOC (Equal Employment Opportunity Commission) and required by <strong>NYC Local Law 144</strong> for any automated hiring tool.</p>
+    <p>It works like this: find the demographic group with the highest selection rate (the group most often moved forward). Every other group must be selected at <strong>at least 80% of that rate</strong>. If any group falls below 80%, that's a disparate impact violation.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> If white applicants advance at a 40% rate, then Black applicants must advance at 32% or higher (80% × 40%). A rate of 28% would fail the test — even if the screener never looked at race directly.
+    </div>
+    <p>The rule catches <em>outcome gaps</em>, not intent. A screener can be completely "race-blind" in its inputs and still fail this test if its scoring produces unequal outcomes.</p>
+    <div class="modal-verdict">
+      <strong>In this audit:</strong> This check runs across groups identified by name-based race signal and gender. A ratio below 0.80 for any group triggers a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<!-- Counterfactual drift modal -->
+<div class="modal-overlay" id="drift-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('drift-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Bias probe</div>
+    <h3>What is Counterfactual drift?</h3>
+    <p>This check asks: does the screener give <strong>different scores to identical résumés</strong> when one detail is swapped? For every candidate, the audit creates a matched twin — same skills, same experience, same degree — but with one signal changed.</p>
+    <p>The score gap between twins is the <strong>drift</strong>. A fair screener should score them identically. Drift above 5% means the screener is using that signal to make decisions.</p>
+    <p>The audit measures drift on three axes — and they don't all carry the same legal weight:</p>
+    <div class="modal-example">
+      <strong style="color:#7c3aed">⚖ Protected axes — legally significant</strong><br><br>
+      <strong>Race proxy</strong> — swaps the applicant's name between one associated with a white candidate and one associated with a Black candidate (Bertrand &amp; Mullainathan, 2004). Drift here means the screener is making decisions based on perceived race. This is a direct EEOC violation risk.<br><br>
+      <strong>Gender</strong> — swaps gender-signal names. Drift here indicates the screener is treating men and women differently for the same qualifications.
+    </div>
+    <div class="modal-verdict">
+      <strong style="color:#92400e">⚠ Proxy axis — indirect risk</strong><br><br>
+      <strong>School prestige</strong> — swaps the institution tier (elite vs. regional school). Favouring Ivy League grads over state school grads is <em>not illegal on its own</em> — it's a legitimate hiring preference. But in the US, elite university attendance correlates strongly with race and family income. High prestige drift is a warning that this preference may be causing the race-based disparate impact the four-fifths check measures.
+    </div>
+    <p style="margin-top:.75rem">Think of prestige drift as the <em>reason</em> behind a four-fifths failure — not a violation in itself.</p>
+  </div>
+</div>
+
+<!-- Kappa modal -->
+<div class="modal-overlay" id="kappa-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('kappa-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Agreement check</div>
+    <h3>What is Recruiter calibration (κ)?</h3>
+    <p>Before trusting an AI screener's output, you need to know whether it agrees with human recruiters on what a good candidate looks like. That's what this check measures.</p>
+    <p><strong>κ (Cohen's kappa)</strong> is a statistical measure of agreement between two raters — in this case, the AI screener and a panel of experienced recruiters. It's scored from −1 to 1, where 1 means perfect agreement and 0 means no better than chance.</p>
+    <div class="modal-example">
+      <strong>How to read it:</strong><br>
+      κ ≥ 0.80 — Near-perfect agreement<br>
+      κ ≥ 0.60 — Substantial agreement ✓ (required to pass)<br>
+      κ ≥ 0.40 — Moderate agreement<br>
+      κ &lt; 0.40 — Weak or poor agreement ✗
+    </div>
+    <p>A screener that fails this check isn't just biased — it's <em>unreliable</em>. It's making different calls than the humans it's supposed to assist, which means it shouldn't be trusted with hiring decisions at all.</p>
+    <div class="modal-verdict">
+      <strong>In this audit:</strong> The AI screener is compared against three synthetic recruiters on blind A/B pairs. Mean κ below 0.60 triggers a <strong>BLOCKED</strong> verdict independently of the bias checks.
+    </div>
+  </div>
+</div>
+
+<!-- Prestige bonus modal -->
+<div class="modal-overlay" id="prestige-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('prestige-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Bias knob</div>
+    <h3>What is Prestige bonus?</h3>
+    <p>This slider lets a screener give <strong>extra points to candidates who attended elite universities</strong> and fewer points to candidates from regional or state schools. The institutions fall into three tiers:</p>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;font-size:.84rem;margin:.75rem 0 1rem;align-items:baseline">
+      <strong style="color:#7c3aed">Tier 1</strong><span style="color:#374151">Ivy League, MIT, Stanford, Caltech — highly selective elite universities</span>
+      <strong style="color:#2563eb">Tier 2</strong><span style="color:#374151">Top 50 national universities — strong selective schools, well-resourced</span>
+      <strong style="color:#6b7280">Tier 3</strong><span style="color:#374151">State schools, regional universities, community colleges — the majority of US graduates</span>
+    </div>
+    <p>At bonus = 0, all tiers are scored equally. As the bonus rises, Tier 1 graduates gain points and Tier 3 graduates are penalised by the same amount.</p>
+    <p>On its own, that might sound reasonable. The problem: in the US, elite university attendance correlates strongly with <strong>race and family income</strong>. A screener that rewards prestige ends up indirectly penalising applicants from underrepresented groups — even if it never looks at a single demographic field.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> Two software engineers. Same skills, same years of experience, same job performance record. One graduated from MIT, one from a state school. A prestige bonus of 0.20 gives the MIT grad a 20-point head start before a single qualification is evaluated.
+    </div>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Drag this above 0 and run the audit. The counterfactual drift check will detect that otherwise-identical résumés are scored differently based on institution tier, and may issue a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<!-- Skills weight modal -->
+<div class="modal-overlay" id="skills-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('skills-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Scoring knob</div>
+    <h3>What is Skills weight?</h3>
+    <p>Every screener has to decide how much to weigh different parts of a résumé. This slider controls <strong>how much of the final score comes from matching required skills</strong> versus other factors like years of experience.</p>
+    <p>At <strong>0.60</strong> (the default), 60% of the score is based on skills match, 40% on experience. Higher values make skills the dominant factor; lower values give more weight to experience.</p>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> This knob is a legitimate scoring choice with no built-in bias. It's here to show that a screener has many tuning levers — and that the audit checks the <em>output</em> for disparate impact regardless of which levers are used.
+    </div>
+  </div>
+</div>
+
+<!-- Advance threshold modal -->
+<div class="modal-overlay" id="threshold-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('threshold-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Scoring knob</div>
+    <h3>What is Advance threshold?</h3>
+    <p>After the screener scores each résumé from 0–100, it needs a cut-off to decide who moves forward. The advance threshold is <strong>the minimum score a candidate needs to be recommended for interview</strong>.</p>
+    <p>At <strong>0.70</strong>, a candidate needs to score 70 or above to advance. Candidates between 0.40 and 0.70 are flagged as borderline. Below 0.40 is a reject.</p>
+    <div class="modal-example">
+      <strong>Why it matters for bias:</strong> A higher threshold means fewer people advance overall. If the screener already has score gaps between demographic groups, raising the bar amplifies those gaps — a smaller pool means the disparate impact ratio gets worse.
+    </div>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Try raising this to 0.80 with name-based signals on. Fewer candidates clear the bar, and the selection rate gap between groups widens further.
+    </div>
+  </div>
+</div>
+
+<!-- Name-signal explainer modal -->
+<div class="modal-overlay" id="name-signal-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('name-signal-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Demo feature</div>
+    <h3>What are name-based signals?</h3>
+    <p>Résumés don't have a race field — applicants don't write their race on a CV. But a name carries that information implicitly. A <strong>name-based race signal</strong> is when an algorithm uses an applicant's name to infer their race and adjusts their score accordingly — making race-based decisions without ever seeing a demographic field.</p>
+    <p>A name-based signal is when a hiring algorithm — intentionally or not — uses an applicant's <strong>name as a proxy for their race or gender</strong> and adjusts their score based on that.</p>
+    <p>It works because names carry demographic information. Research shows that résumés with names commonly associated with Black applicants receive fewer callbacks than identical résumés with white-associated names — even when every other detail is the same.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> Two résumés. Same skills, same experience, same degree. One says "Lakisha Washington." The other says "Emily Walsh." A screener using name-based signals scores Lakisha lower — not because of her qualifications, but because of what her name signals about her background.
+    </div>
+    <p>This is the bias pattern documented by Bertrand &amp; Mullainathan (2004) in their landmark audit study, and it's what <strong>NYC Local Law 144</strong> and the <strong>EEOC four-fifths rule</strong> are designed to catch.</p>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Turning this toggle ON simulates a screener that has learned to use name signals. The audit will detect the resulting score gap between demographic groups and issue a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script>
-// ── XSS guard: escape all values before DOM insertion ─────────────────────
-function esc(v) {
-  return String(v)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+gsap.registerPlugin(ScrollTrigger);
 
-// ── Req loader ────────────────────────────────────────────────────────────
-async function loadReqs() {
-  const res = await fetch('/api/reqs');
-  const reqs = await res.json();
-  const sel = document.getElementById('req-select');
-  sel.textContent = '';  // clear
-  reqs.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.id;
-    opt.textContent = r.title;
-    sel.appendChild(opt);
+// ── Initial states (no FOUC) ───────────────────────────────────────────────
+gsap.set('.hero-tag',       { opacity:0, y:-20 });
+gsap.set('h1',              { opacity:0, y:40  });
+gsap.set('.hero-sub',       { opacity:0, y:30  });
+gsap.set('.hero-actions',   { opacity:0, y:25  });
+gsap.set('.scroll-hint',    { opacity:0         });
+gsap.set('.float-card',     { opacity:0, scale:0.85 });
+gsap.set('.feat-card',      { opacity:0, y:40, rotateX:8 });
+gsap.set('.story-quote',    { opacity:0, x:40  });
+gsap.set('.cta-section h2', { opacity:0, y:30  });
+gsap.set('.cta-section p',  { opacity:0, y:20  });
+gsap.set('.cta-actions',    { opacity:0, y:20  });
+
+// ── Hero entrance ─────────────────────────────────────────────────────────
+const tl = gsap.timeline({ defaults:{ ease:'power3.out' } });
+tl.to('.hero-tag',     { opacity:1, y:0, duration:.7 }, 0.2)
+  .to('h1',            { opacity:1, y:0, duration:.9 }, 0.45)
+  .to('.hero-sub',     { opacity:1, y:0, duration:.8 }, 0.65)
+  .to('.hero-actions', { opacity:1, y:0, duration:.7 }, 0.8)
+  .to('.scroll-hint',  { opacity:1,      duration:.6 }, 1.1)
+  .to('.float-card',   { opacity:1, scale:1, duration:.8, stagger:.12 }, 0.7);
+
+// ── Mouse parallax ────────────────────────────────────────────────────────
+document.addEventListener('mousemove', e => {
+  const dx = (e.clientX - window.innerWidth  / 2) / window.innerWidth;
+  const dy = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+  document.querySelectorAll('[data-depth]').forEach(el => {
+    const d = parseFloat(el.dataset.depth);
+    gsap.to(el, { x:dx*d*60, y:dy*d*40, duration:1.2, ease:'power2.out' });
   });
-}
+});
+
+// ── Feature cards scroll reveal ───────────────────────────────────────────
+gsap.to('.feat-card', {
+  opacity:1, y:0, rotateX:0, duration:.7, stagger:.1, ease:'power2.out',
+  scrollTrigger:{ trigger:'.feat-grid', start:'top 80%' }
+});
+
+// ── Story quote ───────────────────────────────────────────────────────────
+gsap.to('.story-quote', {
+  opacity:1, x:0, duration:.9, ease:'power3.out',
+  scrollTrigger:{ trigger:'.story-quote', start:'top 80%' }
+});
+
+// ── CTA ───────────────────────────────────────────────────────────────────
+gsap.timeline({ scrollTrigger:{ trigger:'.cta-section', start:'top 75%' } })
+  .to('.cta-section h2', { opacity:1, y:0, duration:.8, ease:'power3.out' })
+  .to('.cta-section p',  { opacity:1, y:0, duration:.7, ease:'power2.out' }, '-=.4')
+  .to('.cta-actions',    { opacity:1, y:0, duration:.7, ease:'power2.out' }, '-=.3');
 
 // ── Slider wiring ─────────────────────────────────────────────────────────
-function wireSlider(id, fmt) {
-  const el = document.getElementById(id);
-  const valEl = document.getElementById(id + '-val');
-  el.addEventListener('input', () => { valEl.textContent = fmt(parseFloat(el.value)); });
+function wireSlider(id, fmt, descFn) {
+  const el   = document.getElementById(id);
+  const vEl  = document.getElementById(id + '-val');
+  const dEl  = document.getElementById(id + '-desc');
+  function update() {
+    const v = parseFloat(el.value);
+    if (vEl) vEl.textContent = fmt(v);
+    if (dEl && descFn) {
+      const { text, level } = descFn(v);
+      dEl.textContent = text;
+      dEl.className = 'slider-desc' + (level ? ' ' + level : '');
+    }
+  }
+  if (el) { el.addEventListener('input', update); update(); }
 }
-wireSlider('prestige-bonus',    v => v.toFixed(2));
-wireSlider('skills-weight',     v => v.toFixed(2));
-wireSlider('advance-threshold', v => v.toFixed(2));
 
+wireSlider('prestige-bonus', v => v.toFixed(2), v => {
+  if (v === 0)    return { text: 'No prestige weighting — all institutions scored equally', level: '' };
+  if (v <= 0.10)  return { text: 'Slight preference for Ivy League / elite universities (Tier 1)', level: '' };
+  if (v <= 0.20)  return { text: 'Moderate — Ivy League grads score noticeably higher than state school grads (Tier 3)', level: 'warn' };
+  if (v <= 0.35)  return { text: 'Strong — regional university graduates are significantly penalised vs. Ivy League', level: 'warn' };
+  return           { text: 'Heavy weighting — Ivy League grads get a major score boost; state school grads are penalised', level: 'danger' };
+});
+
+wireSlider('skills-weight', v => v.toFixed(2), v => {
+  if (v <= 0.35)  return { text: 'Experience-led — years in the role matters more than specific skills listed', level: '' };
+  if (v <= 0.55)  return { text: 'Balanced — skills and experience contribute roughly equally', level: '' };
+  if (v <= 0.70)  return { text: 'Skills-led — required skills match is the primary scoring factor', level: '' };
+  return           { text: 'Skills dominant — a missing required skill heavily penalises the candidate', level: 'warn' };
+});
+
+wireSlider('advance-threshold', v => v.toFixed(2), v => {
+  if (window._updatePool) window._updatePool(v);
+  if (v <= 0.45)  return { text: 'Low bar — most candidates who meet minimum requirements will advance', level: '' };
+  if (v <= 0.60)  return { text: 'Moderate bar — roughly the top half of the pool advances', level: '' };
+  if (v <= 0.75)  return { text: 'High bar — only well-qualified candidates advance to interview', level: '' };
+  return           { text: 'Very high bar — few candidates clear this; small pool amplifies any score gaps', level: 'warn' };
+});
 document.getElementById('name-signal').addEventListener('change', e => {
   const on = e.target.checked;
-  document.getElementById('name-signal-label').textContent =
-    on ? 'On — race/gender proxies active' : 'Off — screener cannot see names';
-  document.getElementById('name-signal-hint').style.color =
-    on ? 'var(--red)' : 'var(--muted)';
+  document.getElementById('name-signal-label').textContent = on ? 'On — name-based race and gender signals active' : 'Off — screener cannot see names';
+  document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
+  schedulePoolRefresh();
 });
+
+// ── Pool refresh (re-scores when prestige/skills/name-signal change) ───────
+function getConfig() {
+  return {
+    prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
+    name_signal:           document.getElementById('name-signal').checked,
+    required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
+    threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
+  };
+}
+
+let _poolRefreshTimer = null;
+function schedulePoolRefresh() {
+  // No-op if no pool has been rendered yet
+  if (!window._updatePool) return;
+  clearTimeout(_poolRefreshTimer);
+  _poolRefreshTimer = setTimeout(refreshPool, 350);
+}
+
+async function refreshPool() {
+  if (!window._updatePool) return;
+  const reqId = document.getElementById('req-select').value;
+  if (!reqId) return;
+
+  const poolWrap = document.querySelector('.pool-dot')?.parentElement;
+  if (!poolWrap) return;
+
+  // Show loading state on dots
+  poolWrap.querySelectorAll('.pool-dot').forEach(d => { d.style.opacity = '.3'; });
+
+  try {
+    const res = await fetch('/api/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ req_id: reqId, config: getConfig() }),
+    });
+    if (!res.ok) return;
+    const scores = await res.json();
+    const sorted = [...scores].sort((a, b) => b.raw_score - a.raw_score);
+
+    // Re-assign scores to existing dots in sorted order
+    const dots = Array.from(poolWrap.querySelectorAll('.pool-dot'));
+    sorted.forEach((c, i) => {
+      if (dots[i]) dots[i].dataset.score = c.raw_score;
+    });
+
+    window._poolScores = sorted;
+    window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
+  } catch (_) {
+    poolWrap.querySelectorAll('.pool-dot').forEach(d => { d.style.opacity = '1'; });
+  }
+}
+
+// Wire prestige and skills sliders to pool refresh on release
+['prestige-bonus', 'skills-weight'].forEach(id => {
+  document.getElementById(id).addEventListener('change', schedulePoolRefresh);
+});
+
+// ── Load reqs ─────────────────────────────────────────────────────────────
+async function loadReqs() {
+  try {
+    const reqs = await fetch('/api/reqs').then(r => r.json());
+    const sel  = document.getElementById('req-select');
+    sel.textContent = '';
+    reqs.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.id; o.textContent = r.title; sel.appendChild(o);
+    });
+  } catch (_) {
+    const sel = document.getElementById('req-select');
+    sel.textContent = '';
+    const o = document.createElement('option');
+    o.textContent = 'Server not running'; sel.appendChild(o);
+  }
+}
 
 // ── Run audit ─────────────────────────────────────────────────────────────
 async function runAudit() {
-  const reqId = document.getElementById('req-select').value;
+  const reqId  = document.getElementById('req-select').value;
   const config = {
     prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
     name_signal:           document.getElementById('name-signal').checked,
     required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
     threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
   };
+  const btn   = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = 'Computing…';
 
-  const btn = document.getElementById('run-audit-btn');
-  btn.disabled = true;
-  btn.textContent = 'Running…';
-  setLoading('audit-results-panel');
-  setLoading('fidelity-panel');
+  const panel = document.getElementById('results-panel');
+  panel.textContent = '';
+  const ph  = panel.appendChild(document.createElement('div'));
+  ph.className = 'card';
+  ph.style.cssText = 'text-align:center;padding:3rem';
+  const sp = ph.appendChild(document.createElement('div'));
+  sp.style.cssText = 'display:inline-block;width:24px;height:24px;border:3px solid #e8eaed;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.75rem';
+  ph.appendChild(document.createTextNode('Running audit…'));
 
   try {
-    const [auditRes, fidRes] = await Promise.all([
-      fetch('/api/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ req_id: reqId, config }),
-      }),
+    const body = JSON.stringify({req_id:reqId,config});
+    const headers = {'Content-Type':'application/json'};
+    const [ar, fr, sr] = await Promise.all([
+      fetch('/api/audit',   { method:'POST', headers, body }),
       fetch('/api/fidelity/' + encodeURIComponent(reqId)),
+      fetch('/api/scores',  { method:'POST', headers, body }),
     ]);
-
-    if (!auditRes.ok) throw new Error('Audit API error ' + auditRes.status);
-    if (!fidRes.ok)   throw new Error('Fidelity API error ' + fidRes.status);
-
-    const audit    = await auditRes.json();
-    const fidelity = await fidRes.json();
-
-    renderAudit(audit);
-    renderFidelity(fidelity);
+    if (!ar.ok) throw new Error('Audit ' + ar.status);
+    if (!fr.ok) throw new Error('Fidelity ' + fr.status);
+    if (!sr.ok) throw new Error('Scores ' + sr.status);
+    renderResults(panel, await ar.json(), await fr.json(), await sr.json());
   } catch(e) {
-    setError('audit-results-panel', e.message);
-    setError('fidelity-panel', e.message);
+    panel.textContent = '';
+    const err = panel.appendChild(document.createElement('div'));
+    err.className = 'card';
+    err.style.cssText = 'padding:2rem;color:#dc2626;text-align:center';
+    err.textContent = 'Error: ' + e.message + ' — is the server running at localhost:8000?';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Run audit';
+    btn.disabled = false; btn.textContent = 'Run audit';
   }
 }
 
-// ── Loading / error states ─────────────────────────────────────────────────
-function setLoading(id) {
-  const el = document.getElementById(id);
-  el.textContent = '';
-  const wrap = el.appendChild(document.createElement('div'));
-  wrap.className = 'card placeholder';
-  const spin = wrap.appendChild(document.createElement('div'));
-  spin.className = 'spinner';
-  const msg = wrap.appendChild(document.createElement('div'));
-  msg.textContent = 'Computing…';
-}
-
-function setError(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = '';
-  const wrap = el.appendChild(document.createElement('div'));
-  wrap.className = 'card placeholder';
-  wrap.style.color = 'var(--red)';
-  wrap.textContent = 'Error: ' + msg;
-}
-
-// ── Render audit ──────────────────────────────────────────────────────────
-function renderAudit(data) {
-  const panel = document.getElementById('audit-results-panel');
+function renderResults(panel, audit, fidelity, scores) {
   panel.textContent = '';
-  panel.className = 'fade-in';
+  const pass = audit.verdict === 'CERTIFIED';
 
-  const pass = data.verdict === 'CERTIFIED';
-  const container = panel.appendChild(document.createElement('div'));
+  // Verdict hero (above the grid)
+  const hero = document.getElementById('verdict-hero');
+  hero.className = 'verdict-hero ' + (pass ? 'certified' : 'blocked');
+  hero.style.display = 'flex';
+  document.getElementById('vh-verdict').textContent = pass ? '✓ All checks passed' : '✗ Bias detected — blocked';
+  document.getElementById('vh-sub').textContent = audit.n_resumes + ' résumés · ' + audit.n_pairs + ' pairs';
+  const minRatio = Math.min(...Object.values(audit.four_fifths.ratios));
+  const maxDrift = Math.max(...Object.values(audit.drift.axis_results).map(r => r.max_drift));
+  document.getElementById('vh-ratio').textContent = minRatio.toFixed(2);
+  document.getElementById('vh-ratio').style.color = minRatio >= 0.8 ? '#16a34a' : '#dc2626';
+  document.getElementById('vh-ratio-lbl').textContent = 'Disparate impact ratio · ' + (minRatio >= 0.8 ? 'PASS' : 'FAIL');
+  document.getElementById('vh-drift').textContent = maxDrift.toFixed(3);
+  document.getElementById('vh-drift').style.color = maxDrift <= audit.drift.drift_threshold ? '#16a34a' : '#dc2626';
+  document.getElementById('vh-kappa').textContent = fidelity.mean_kappa_ai_human.toFixed(3);
+  document.getElementById('vh-kappa').style.color = fidelity.mean_kappa_ai_human >= 0.6 ? '#16a34a' : '#dc2626';
+  const vhBadge = document.getElementById('vh-badge');
+  vhBadge.textContent = pass ? 'CERTIFIED' : 'BLOCKED';
+  vhBadge.style.background = pass ? '#16a34a' : '#dc2626';
+  vhBadge.style.color = '#fff';
+  gsap.from(hero, { opacity:0, y:-12, duration:.4, ease:'power2.out' });
 
-  // Verdict card
-  const verdictCard = appendCard(container);
-  const vh = appendRow(verdictCard, 'Verdict');
-  const badge = vh.appendChild(document.createElement('div'));
-  badge.className = 'verdict-badge ' + (pass ? 'certified' : 'blocked');
-  const dot = badge.appendChild(document.createElement('div'));
-  dot.className = 'verdict-dot';
-  badge.appendChild(document.createTextNode(data.verdict));
+  // Verdict banner
+  const vb = panel.appendChild(document.createElement('div'));
+  vb.className = 'v-banner' + (pass ? '' : ' blocked');
+  const vl = vb.appendChild(document.createElement('div'));
+  const lbl = vl.appendChild(document.createElement('div')); lbl.className = 'v-label'; lbl.textContent = 'Audit verdict';
+  const vm  = vl.appendChild(document.createElement('div')); vm.className  = 'v-main' + (pass ? '' : ' blocked'); vm.textContent = pass ? '✓ All checks passed' : '✗ Blocked — bias detected';
+  const vs  = vl.appendChild(document.createElement('div')); vs.className  = 'v-sub';  vs.textContent = audit.n_resumes + ' résumés · ' + audit.n_pairs + ' pairs';
+  const badge = vb.appendChild(document.createElement('div')); badge.className = 'v-badge' + (pass ? '' : ' blocked');
+  const dot = badge.appendChild(document.createElement('div')); dot.className = 'vd';
+  badge.appendChild(document.createTextNode(pass ? 'CERTIFIED' : 'BLOCKED'));
 
-  const detail = verdictCard.appendChild(document.createElement('div'));
-  detail.className = 'sub';
-  detail.style.marginTop = '.4rem';
-  detail.textContent = data.detail;
+  // Executive summary
+  (function() {
+    const ex = panel.appendChild(document.createElement('div'));
+    ex.className = 'exec-summary ' + (pass ? 'certified' : 'blocked');
+    const h4 = ex.appendChild(document.createElement('h4'));
+    h4.textContent = pass ? 'Why this screener passed' : 'Why this screener was blocked';
 
-  const meta = verdictCard.appendChild(document.createElement('div'));
-  meta.className = 'meta-row';
-  meta.innerHTML = 'Résumés: <strong>' + esc(data.n_resumes) + '</strong>'
-    + '&nbsp;&nbsp;Pairs: <strong>' + esc(data.n_pairs) + '</strong>';
+    // Find worst four-fifths group
+    const ffRatios = audit.four_fifths.ratios;
+    const ffGroups = audit.four_fifths.groups;
+    const worstKey = Object.entries(ffRatios).sort((a,b) => a[1]-b[1])[0];
+    const worstGroup = worstKey ? ffGroups.find(g => worstKey[0].includes(g.group)) : null;
+    const bestGroup  = worstKey ? ffGroups.find(g => ffRatios[`eeo_race:${g.group}`] === Math.max(...Object.values(ffRatios))) : null;
 
-  // Four-fifths card
-  const ffCard = appendCard(container);
-  ffCard.style.marginTop = '1rem';
-  const ffRow = appendRow(ffCard, 'Four-fifths disparate impact');
-  appendPassFail(ffRow, data.four_fifths.passed);
+    // Find worst drift axis
+    const driftResults = audit.drift.axis_results;
+    const worstDriftEntry = Object.entries(driftResults).sort((a,b) => b[1].flip_rate - a[1].flip_rate)[0];
+    const AXIS_LABEL_PLAIN = { race_proxy:'applicant name (race signal)', gender:'applicant name (gender signal)', prestige_tier:'school prestige' };
 
-  const ffSub = ffCard.appendChild(document.createElement('div'));
-  ffSub.className = 'sub';
-  ffSub.textContent = 'Threshold: ratio ≥ 0.80 per group';
+    const p1 = ex.appendChild(document.createElement('p'));
+    if (!pass && worstGroup && bestGroup) {
+      const topRate  = (bestGroup.selection_rate  * 100).toFixed(1);
+      const failRate = (worstGroup.selection_rate * 100).toFixed(1);
+      const ratio    = worstKey[1].toFixed(2);
+      p1.innerHTML = `The screener advanced <strong>${bestGroup.group}</strong> applicants at a <strong>${topRate}%</strong> rate and <strong>${worstGroup.group}</strong> applicants at a <strong>${failRate}%</strong> rate, producing a disparate-impact ratio of <strong>${ratio}</strong> — below the required 0.80 threshold. This triggers a violation under EEOC § 60-3.4 and NYC Local Law 144.`;
+    } else if (pass) {
+      const minRatioVal = Math.min(...Object.values(ffRatios));
+      p1.innerHTML = `All racial/ethnic groups were advanced at comparable rates. The lowest disparate-impact ratio was <strong>${minRatioVal.toFixed(2)}</strong>, above the 0.80 threshold required by EEOC § 60-3.4 and NYC Local Law 144.`;
+    } else {
+      p1.textContent = audit.detail;
+    }
 
-  const ffTable = ffCard.appendChild(document.createElement('table'));
-  const thead = ffTable.appendChild(document.createElement('thead'));
-  appendTH(thead, ['Group', 'Rate', 'Ratio', '']);
+    if (!pass && worstDriftEntry && worstDriftEntry[1].flip_rate > 0.05) {
+      const p2 = ex.appendChild(document.createElement('p'));
+      const axLabel = AXIS_LABEL_PLAIN[worstDriftEntry[0]] || worstDriftEntry[0];
+      p2.innerHTML = `Investigation shows that <strong>${axLabel}</strong> acted as a proxy feature. Altering only that signal changed model decisions in <strong>${(worstDriftEntry[1].flip_rate * 100).toFixed(0)}%</strong> of tested pairs of otherwise-identical résumés.`;
+    }
 
-  const tbody = ffTable.appendChild(document.createElement('tbody'));
-  const ratios = data.four_fifths.ratios;
-  if (Object.keys(ratios).length === 0) {
-    const tr = tbody.appendChild(document.createElement('tr'));
-    const td = tr.appendChild(document.createElement('td'));
-    td.colSpan = 4;
-    td.textContent = 'No groups computed';
-    td.style.color = 'var(--muted)';
-  } else {
-    Object.entries(ratios).forEach(([key, ratio]) => {
-      const ok = ratio >= 0.8;
-      const tr = tbody.appendChild(document.createElement('tr'));
-      appendTD(tr, key).style.color = 'var(--muted)';
-      const barTD = tr.appendChild(document.createElement('td'));
-      barTD.style.padding = '0 1rem';
-      const wrap = barTD.appendChild(document.createElement('div'));
-      wrap.className = 'bar-wrap';
-      const fill = wrap.appendChild(document.createElement('div'));
-      fill.className = 'bar-fill ' + (ok ? 'pass' : 'fail');
-      fill.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
-      const valTD = appendTD(tr, ratio.toFixed(2));
-      valTD.style.textAlign = 'right';
-      valTD.style.fontWeight = '600';
-      valTD.style.color = ok ? 'var(--green)' : 'var(--red)';
-      const flagTD = appendTD(tr, ok ? '✓' : '< 0.80 ✗');
-      flagTD.style.fontSize = '.75rem';
-      flagTD.style.color = ok ? 'var(--green)' : 'var(--red)';
+    const p3 = ex.appendChild(document.createElement('p'));
+    const kappaOk = fidelity.mean_kappa_ai_human >= 0.6;
+    if (!pass) {
+      p3.innerHTML = `Because the model fails fairness requirements, deployment is blocked despite ${kappaOk ? 'strong' : 'weak'} recruiter agreement (κ = <strong>${fidelity.mean_kappa_ai_human.toFixed(3)}</strong>). Recruiter agreement measures consistency, not fairness — a biased screener can be consistently wrong.`;
+    } else {
+      p3.innerHTML = `Recruiter agreement is ${kappaOk ? 'strong' : 'below threshold'} (κ = <strong>${fidelity.mean_kappa_ai_human.toFixed(3)}</strong>), confirming the AI decisions are consistent with human judgment. The screener is cleared for deployment under current configuration.`;
+    }
+  })();
+
+  // Candidate pool visualization
+  if (scores && scores.length) {
+    const poolCard = mkCard(panel, '1rem');
+    const poolh = mkCh(poolCard, 'Candidate pool');
+    const poolSub = poolCard.appendChild(document.createElement('div'));
+    poolSub.className = 'sub-t';
+    poolSub.id = 'pool-sub';
+
+    const RACE_COLOR = { white:'#2563eb', black:'#dc2626', hispanic:'#d97706', asian:'#7c3aed', unknown:'#9ca3af' };
+
+    // Sort by score descending
+    const sorted = [...scores].sort((a,b) => b.raw_score - a.raw_score);
+
+    const poolWrap = poolCard.appendChild(document.createElement('div'));
+    poolWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin:.75rem 0 .5rem;';
+
+    sorted.forEach(c => {
+      const dot = poolWrap.appendChild(document.createElement('div'));
+      dot.className = 'pool-dot';
+      dot.dataset.score = c.raw_score;
+      dot.dataset.race = c.eeo_race || c.race_proxy;
+      dot.title = `Score: ${(c.raw_score*100).toFixed(0)} · ${c.eeo_race || c.race_proxy} · ${c.latent_fit}`;
+      const color = RACE_COLOR[c.eeo_race] || RACE_COLOR[c.race_proxy] || '#9ca3af';
+      dot.style.background = color;
+    });
+
+    const legend = poolCard.appendChild(document.createElement('div'));
+    legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:.6rem';
+    Object.entries(RACE_COLOR).forEach(([grp, col]) => {
+      const item = legend.appendChild(document.createElement('div'));
+      item.style.cssText = 'display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:#6b7280';
+      const swatch = item.appendChild(document.createElement('div'));
+      swatch.style.cssText = `width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0`;
+      item.appendChild(document.createTextNode(grp));
+    });
+
+    // Store scores globally for live threshold updates
+    window._poolScores = sorted;
+    window._updatePool = function(threshold) {
+      const dots = poolWrap.querySelectorAll('.pool-dot');
+      let adv = 0, rej = 0;
+      dots.forEach(d => {
+        const sc = parseFloat(d.dataset.score);
+        if (sc >= threshold) { d.style.opacity = '1'; d.style.transform = 'scale(1)'; adv++; }
+        else                 { d.style.opacity = '.18'; d.style.transform = 'scale(0.7)'; rej++; }
+      });
+      const sub = document.getElementById('pool-sub');
+      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by self-reported race/ethnicity`;
+    };
+    window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
+  }
+
+  // Screener configuration
+  if (audit.screener_config) {
+    const cfgCard = mkCard(panel, '1rem');
+    mkCh(cfgCard, 'Screener configuration tested');
+    mkSub(cfgCard, 'Exact settings submitted to the audit — required for NYC LL 144 documentation');
+    const sc = audit.screener_config;
+    const cfgRows = [
+      ['Required skills weight',  (sc.required_skill_weight * 100).toFixed(0) + '%'],
+      ['Nice-to-have weight',     (sc.nice_to_have_weight   * 100).toFixed(0) + '%'],
+      ['Experience weight',       (sc.experience_weight     * 100).toFixed(0) + '%'],
+      ['Advance threshold',       (sc.threshold_advance     * 100).toFixed(0) + '% score'],
+      ['Prestige bonus',          sc.prestige_bonus > 0 ? '+' + (sc.prestige_bonus * 100).toFixed(0) + '%' : 'Off'],
+      ['Name-based signals',      sc.name_signal ? '⚠ ON — race/gender bias applied' : 'Off'],
+    ];
+    const cfgt = mkTable(cfgCard, ['Setting', 'Value']);
+    cfgRows.forEach(([label, val]) => {
+      const tr = cfgt.appendChild(document.createElement('tr'));
+      mkTD(tr, label).style.color = '#6b7280';
+      const vtd = mkTD(tr, val);
+      if (label === 'Name-based signals' && sc.name_signal) vtd.style.color = '#dc2626';
     });
   }
 
-  // Drift card
-  const drCard = appendCard(container);
-  drCard.style.marginTop = '1rem';
-  const drRow = appendRow(drCard, 'Counterfactual drift');
-  appendPassFail(drRow, data.drift.passed);
-
-  const drSub = drCard.appendChild(document.createElement('div'));
-  drSub.className = 'sub';
-  drSub.textContent = 'Threshold: mean drift ≤ ' + data.drift.drift_threshold;
-
-  const drTable = drCard.appendChild(document.createElement('table'));
-  drTable.className = 'drift-tbl';
-  const drThead = drTable.appendChild(document.createElement('thead'));
-  appendTH(drThead, ['Axis', 'Mean drift', 'Max drift', 'Flip rate', 'Pairs']);
-  const drTbody = drTable.appendChild(document.createElement('tbody'));
-  const axisResults = data.drift.axis_results;
-  if (Object.keys(axisResults).length === 0) {
-    const tr = drTbody.appendChild(document.createElement('tr'));
-    const td = tr.appendChild(document.createElement('td'));
-    td.colSpan = 5; td.textContent = 'No drift data'; td.style.color = 'var(--muted)';
-  } else {
-    Object.entries(axisResults).forEach(([axis, r]) => {
-      const ok = r.mean_drift <= data.drift.drift_threshold;
-      const tr = drTbody.appendChild(document.createElement('tr'));
-      appendTD(tr, axis);
-      const mdTD = appendTD(tr, r.mean_drift.toFixed(4));
-      mdTD.style.textAlign = 'right';
-      mdTD.style.color = ok ? 'var(--green)' : 'var(--red)';
-      appendTDRight(tr, r.max_drift.toFixed(4));
-      appendTDRight(tr, (r.flip_rate * 100).toFixed(1) + '%');
-      appendTDRight(tr, String(r.n_pairs));
-    });
-  }
-}
-
-// ── Render fidelity ───────────────────────────────────────────────────────
-function renderFidelity(data) {
-  const panel = document.getElementById('fidelity-panel');
-  panel.textContent = '';
-  panel.className = 'fade-in';
-
-  const kappaPct = Math.max(0, Math.min(100, (data.mean_kappa_ai_human + 1) / 2 * 100));
-  const kappaOk  = data.mean_kappa_ai_human >= 0.60;
-
-  // κ card
-  const kappaCard = appendCard(panel);
-  const kh = appendRow(kappaCard, 'AI–Recruiter Agreement (κ)');
-  appendPassFail(kh, data.passes);
-
-  const kg = kappaCard.appendChild(document.createElement('div'));
-  kg.className = 'kappa-grid';
-  addKappaStat(kg, data.mean_kappa_ai_human.toFixed(3), 'Mean κ (AI vs recruiter)');
-  addKappaStat(kg, data.kappa_human_human.toFixed(3),   'κ human-human baseline');
-  addKappaStat(kg, (data.gold_pass_rate * 100).toFixed(0) + '%', 'Gold pair accuracy');
-
-  const barWrap = kappaCard.appendChild(document.createElement('div'));
-  barWrap.className = 'kappa-bar-wrap';
-  const barFill = barWrap.appendChild(document.createElement('div'));
-  barFill.className = 'kappa-bar-fill';
-  barFill.style.width = kappaPct.toFixed(1) + '%';
-
-  const axis = kappaCard.appendChild(document.createElement('div'));
-  axis.className = 'kappa-axis';
-  setText(axis.appendChild(document.createElement('span')), '−1 (inverse)');
-  const thr = axis.appendChild(document.createElement('span'));
-  thr.className = 'threshold-label';
-  thr.textContent = '0.60 threshold';
-  setText(axis.appendChild(document.createElement('span')), '1.0 (perfect)');
-
-  // Per-judge breakdown card
-  const judgeCard = appendCard(panel);
-  judgeCard.style.marginTop = '1rem';
-  const jh = judgeCard.appendChild(document.createElement('div'));
-  jh.style.cssText = 'font-weight:700;margin-bottom:.75rem;font-size:.95rem;';
-  jh.textContent = 'Per-judge breakdown';
-  const jsub = judgeCard.appendChild(document.createElement('div'));
-  jsub.className = 'sub';
-  jsub.textContent = data.n_pairs + ' pairs · ' + data.n_gold + ' gold attention checks';
-
-  const jTable = judgeCard.appendChild(document.createElement('table'));
-  jTable.className = 'drift-tbl';
-  const jThead = jTable.appendChild(document.createElement('thead'));
-  appendTH(jThead, ['Judge', 'κ', 'Observed agree.', 'Pairs']);
-  const jTbody = jTable.appendChild(document.createElement('tbody'));
-  data.kappa_ai_human.forEach(k => {
-    const tr = jTbody.appendChild(document.createElement('tr'));
-    appendTD(tr, k.judge_b);
-    appendTDRight(tr, k.kappa.toFixed(3));
-    appendTDRight(tr, (k.observed_agreement * 100).toFixed(1) + '%');
-    appendTDRight(tr, String(k.n_pairs));
+  // Four-fifths
+  const ffCard = mkCard(panel, '1rem');
+  const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
+  const minN = audit.four_fifths.stat_min_n || 1;
+  mkSub(ffCard, `Source: self-reported race/ethnicity (EEO form) — not name-inferred · ratio ≥ 0.80 required · EEOC / NYC Local Law 144 · groups with fewer than ${minN} applicants shown but excluded from verdict`);
+  const fft = mkTable(ffCard, ['Group (EEO)','Rate bar','Sel. rate','Ratio / status']);
+  // Show ALL groups sorted by name; dim those below stat threshold
+  const ffGroups = [...audit.four_fifths.groups].sort((a,b) => a.group.localeCompare(b.group));
+  ffGroups.forEach(g => {
+    const ratioKey = `eeo_race:${g.group}`;
+    const ratio = audit.four_fifths.ratios[ratioKey];
+    const inVerdict = g.in_verdict;
+    const ok = ratio !== undefined ? ratio >= 0.8 : true;
+    const tr = fft.appendChild(document.createElement('tr'));
+    if (!inVerdict) tr.style.opacity = '0.45';
+    mkTD(tr, g.group).style.color = '#6b7280';
+    const btd = tr.appendChild(document.createElement('td')); btd.style.padding = '0 1rem';
+    if (inVerdict && ratio !== undefined) {
+      const bw = btd.appendChild(document.createElement('div')); bw.className = 'bw';
+      const bf = bw.appendChild(document.createElement('div')); bf.className = 'bf' + (ok ? '' : ' fail');
+      bf.style.width = Math.min(100, ratio * 100).toFixed(1) + '%';
+    }
+    mkTD(tr, (g.selection_rate * 100).toFixed(1) + '%').className = 'nut';
+    const ratioTd = mkTD(tr, inVerdict && ratio !== undefined ? ratio.toFixed(2) : `n=${g.n} (excluded)`);
+    if (inVerdict && ratio !== undefined) ratioTd.className = 'nut ' + (ok ? 'gn' : 'rd');
+    else ratioTd.style.color = '#9ca3af';
   });
+
+  // Drift — pass/warn/fail based on whether violations are on protected axes
+  const PROTECTED_AXES = new Set(['race_proxy', 'gender']);
+  const drCard = mkCard(panel, '1rem');
+  const drh = mkCh(drCard, 'Counterfactual drift', 'drift-modal');
+  const drAxisResults = audit.drift.axis_results;
+  const hasProtectedDrift = Object.entries(drAxisResults).some(
+    ([ax, r]) => PROTECTED_AXES.has(ax) && r.mean_drift > audit.drift.drift_threshold
+  );
+  const hasProxyDrift = Object.entries(drAxisResults).some(
+    ([ax, r]) => !PROTECTED_AXES.has(ax) && r.mean_drift > audit.drift.drift_threshold
+  );
+  if (audit.drift.passed && !hasProxyDrift) {
+    mkPill(drh, true);
+  } else if (!audit.drift.passed || hasProtectedDrift) {
+    mkPill(drh, false);
+  } else {
+    // proxy-only drift — warn but don't fail
+    const s = drh.appendChild(document.createElement('span'));
+    s.className = 'warn-pill'; s.textContent = '⚠ Proxy warning';
+  }
+  mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
+  const PROTECTED = { race_proxy: true, gender: true };
+  const AXIS_LABEL = { race_proxy: 'race (from name)', gender: 'gender (from name)', prestige_tier: 'school prestige' };
+  const drt = mkTable(drCard, ['Axis','Type','Mean drift','Max drift','Flip rate']);
+  Object.entries(audit.drift.axis_results).forEach(([axis, r]) => {
+    const ok = r.mean_drift <= audit.drift.drift_threshold;
+    const isProtected = PROTECTED[axis] || false;
+    const tr = drt.appendChild(document.createElement('tr'));
+    mkTD(tr, AXIS_LABEL[axis] || axis);
+    const typeTd = mkTD(tr, isProtected ? 'Protected ⚖' : 'Proxy ⚠');
+    typeTd.style.cssText = 'font-size:.75rem;font-weight:600;color:' + (isProtected ? '#7c3aed' : '#92400e');
+    mkTD(tr, r.mean_drift.toFixed(4)).className = 'nut ' + (ok ? 'gn' : 'rd');
+    mkTD(tr, r.max_drift.toFixed(4)).className  = 'nut';
+    mkTD(tr, (r.flip_rate*100).toFixed(1)+'%').className = 'nut';
+  });
+
+  // Fidelity
+  const fidCard = mkCard(panel, '1rem');
+  const fidh = mkCh(fidCard, 'Recruiter calibration (κ)', 'kappa-modal'); mkPill(fidh, fidelity.passes);
+  const kg = fidCard.appendChild(document.createElement('div')); kg.className = 'kg';
+  addKStat(kg, fidelity.mean_kappa_ai_human.toFixed(3),         'Mean κ');
+  addKStat(kg, fidelity.kappa_human_human.toFixed(3),           'Human-human κ');
+  addKStat(kg, (fidelity.gold_pass_rate*100).toFixed(0)+'%',    'Gold accuracy');
+  const kbw = fidCard.appendChild(document.createElement('div')); kbw.className = 'kbw';
+  const kbf = kbw.appendChild(document.createElement('div'));     kbf.className = 'kbf';
+  kbf.style.width = Math.max(0,Math.min(100,(fidelity.mean_kappa_ai_human+1)/2*100)).toFixed(1) + '%';
+  const ka = fidCard.appendChild(document.createElement('div')); ka.className = 'ka';
+  const s1 = ka.appendChild(document.createElement('span')); s1.textContent = '−1.0';
+  const s2 = ka.appendChild(document.createElement('span')); s2.className = 't'; s2.textContent = '0.60 threshold';
+  const s3 = ka.appendChild(document.createElement('span')); s3.textContent = '1.0';
+
+  gsap.from(panel.children, { opacity:0, y:16, duration:.45, stagger:.07, ease:'power2.out' });
 }
 
-// ── DOM helpers ───────────────────────────────────────────────────────────
-function appendCard(parent) {
-  const d = parent.appendChild(document.createElement('div'));
-  d.className = 'card';
+// DOM helpers
+function mkCard(p, mt) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'card';
+  if (mt) d.style.marginTop = mt; return d;
+}
+function mkCh(p, title, modalId) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'ch';
+  const left = d.appendChild(document.createElement('div'));
+  left.style.cssText = 'display:flex;align-items:center;gap:.35rem';
+  const h = left.appendChild(document.createElement('h3')); h.textContent = title;
+  if (modalId) {
+    const btn = left.appendChild(document.createElement('button'));
+    btn.className = 'info-btn'; btn.textContent = '?';
+    btn.setAttribute('aria-label', 'Learn more about ' + title);
+    btn.onclick = () => document.getElementById(modalId).classList.add('open');
+  }
   return d;
 }
-function appendRow(parent, title) {
-  const d = parent.appendChild(document.createElement('div'));
-  d.className = 'row-header';
-  const h3 = d.appendChild(document.createElement('h3'));
-  h3.textContent = title;
-  return d;
+function mkPill(p, passed) {
+  const s = p.appendChild(document.createElement('span')); s.className = passed ? 'pass-pill' : 'fail-pill';
+  s.textContent = passed ? '✓ Pass' : '✗ Fail';
 }
-function appendPassFail(parent, passed) {
-  const s = parent.appendChild(document.createElement('span'));
-  s.className = passed ? 'pass-label' : 'fail-label';
-  s.textContent = passed ? '✓ PASS' : '✗ FAIL';
+function mkSub(p, text) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'sub-t'; d.textContent = text;
 }
-function appendTH(thead, cols) {
+function mkTable(p, cols) {
+  const t = p.appendChild(document.createElement('table'));
+  const thead = t.appendChild(document.createElement('thead'));
   const tr = thead.appendChild(document.createElement('tr'));
   cols.forEach(c => { const th = tr.appendChild(document.createElement('th')); th.textContent = c; });
+  return t.appendChild(document.createElement('tbody'));
 }
-function appendTD(tr, text) {
-  const td = tr.appendChild(document.createElement('td'));
-  td.textContent = text;
-  return td;
+function mkTD(tr, text) { const td = tr.appendChild(document.createElement('td')); td.textContent = text; return td; }
+function addKStat(p, num, lbl) {
+  const d = p.appendChild(document.createElement('div')); d.className = 'ks';
+  const n = d.appendChild(document.createElement('div')); n.className = 'kn'; n.textContent = num;
+  const l = d.appendChild(document.createElement('div')); l.className = 'kl'; l.textContent = lbl;
 }
-function appendTDRight(tr, text) {
-  const td = appendTD(tr, text);
-  td.style.textAlign = 'right';
-  return td;
-}
-function addKappaStat(parent, num, label) {
-  const div = parent.appendChild(document.createElement('div'));
-  div.className = 'kappa-stat';
-  const n = div.appendChild(document.createElement('div'));
-  n.className = 'kappa-num'; n.textContent = num;
-  const l = div.appendChild(document.createElement('div'));
-  l.className = 'kappa-lbl'; l.textContent = label;
-}
-function setText(el, text) { el.textContent = text; return el; }
 
-// ── Init ──────────────────────────────────────────────────────────────────
+document.head.appendChild(Object.assign(document.createElement('style'), { textContent:'@keyframes spin{to{transform:rotate(360deg)}}' }));
 loadReqs();
 </script>
 </body>

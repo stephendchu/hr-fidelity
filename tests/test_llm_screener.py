@@ -45,6 +45,7 @@ def resume() -> Resume:
             inferred_gender="F",
             inferred_race_proxy="black",
             source="bertrand_mullainathan",
+            eeo_race="black",
         ),
         education=[Education(degree="B.S.", field="Computer Science",
                              institution="State University", prestige_tier=3,

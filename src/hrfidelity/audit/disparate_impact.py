@@ -24,9 +24,10 @@ class GroupRate:
 @dataclass
 class FourFifthsResult:
     passed: bool
-    groups: list[GroupRate]
-    ratios: dict[str, float]  # "axis:group" → ratio vs top group
+    groups: list[GroupRate]       # ALL groups, regardless of size (for display)
+    ratios: dict[str, float]      # "axis:group" → ratio — only groups ≥ stat_min_n
     detail: str
+    stat_min_n: int = 1           # groups below this are shown but excluded from verdict
 
 
 def four_fifths_check(
@@ -36,25 +37,31 @@ def four_fifths_check(
     axes: list[str] | None = None,
     min_group_size: int = 1,
 ) -> FourFifthsResult:
-    """Return FourFifthsResult; failed if any group ratio < 0.80."""
+    """Return FourFifthsResult; failed if any group with n ≥ min_group_size has ratio < 0.80.
+
+    All groups are included in .groups for display; small groups are excluded
+    from .ratios and cannot trigger a failure.
+    """
     if axes is None:
         axes = ["race_proxy", "gender"]
 
     score_map = {s.candidate_id: s for s in scores}
-    all_groups: list[GroupRate] = []
 
+    # Collect ALL groups (min_group_size=1) for display
+    all_groups: list[GroupRate] = []
     for axis in axes:
-        all_groups.extend(_compute_groups(resumes, score_map, axis, min_group_size))
+        all_groups.extend(_compute_groups(resumes, score_map, axis, 1))
 
     ratios: dict[str, float] = {}
     failures: list[str] = []
 
     for axis in axes:
-        axis_groups = [g for g in all_groups if g.axis == axis]
-        if not axis_groups:
+        # Verdict uses only statistically meaningful groups
+        stat_groups = [g for g in all_groups if g.axis == axis and g.n >= min_group_size]
+        if not stat_groups:
             continue
-        top_rate = max(g.selection_rate for g in axis_groups)
-        for g in axis_groups:
+        top_rate = max(g.selection_rate for g in stat_groups)
+        for g in stat_groups:
             ratio = (g.selection_rate / top_rate) if top_rate > 0 else 1.0
             ratios[f"{axis}:{g.group}"] = ratio
             if ratio < 0.8:
@@ -62,7 +69,13 @@ def four_fifths_check(
 
     passed = not failures
     detail = "all groups ≥ 0.8" if passed else f"four-fifths violations: {failures}"
-    return FourFifthsResult(passed=passed, groups=all_groups, ratios=ratios, detail=detail)
+    return FourFifthsResult(
+        passed=passed,
+        groups=all_groups,
+        ratios=ratios,
+        detail=detail,
+        stat_min_n=min_group_size,
+    )
 
 
 def _compute_groups(
@@ -96,6 +109,8 @@ def _compute_groups(
 
 
 def _group_key(resume: Resume, axis: str) -> str:
+    if axis == "eeo_race":
+        return resume.identity.eeo_race or resume.identity.inferred_race_proxy
     if axis == "race_proxy":
         return resume.identity.inferred_race_proxy
     if axis == "gender":

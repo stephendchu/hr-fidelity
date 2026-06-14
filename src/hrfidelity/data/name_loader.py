@@ -56,6 +56,32 @@ _BM_FIRST_NAMES: set[str] = {
     for side in ("white", "black")
 }
 
+# EEO race given name-inferred proxy.  Calibrated to reflect a FANG-tier tech
+# company in New York (public EEO-1 disclosures: Google, Meta, Amazon ~2023):
+#   Asian ~40%, White ~35%, Hispanic/Latino ~12%, Black ~8%, other ~5%.
+#
+# Key modelling insight: many Asian engineers in the US have Western first names
+# (James, David, Kevin) that appear as "white" proxy in our B-M name dataset,
+# but they self-report Asian on the EEO form — hence the 0.45 weight on asian
+# from a "white" proxy.  Black is intentionally kept at realistic FANG levels
+# (~8%).  With n ≈ 12 candidates the group is below the statistical minimum
+# for four-fifths analysis, so bias detection falls to the counterfactual drift
+# check — which is the real-world situation at most large tech companies.
+_EEO_RACE_GIVEN_PROXY: dict[str, tuple[list[str], list[float]]] = {
+    "white":    (["white", "black", "hispanic", "asian"], [0.43, 0.02, 0.10, 0.45]),
+    "black":    (["white", "black", "hispanic", "asian"], [0.15, 0.22, 0.25, 0.28]),
+    "hispanic": (["white", "black", "hispanic", "asian"], [0.12, 0.08, 0.70, 0.10]),
+    "asian":    (["white", "black", "hispanic", "asian"], [0.10, 0.05, 0.08, 0.77]),
+    "other":    (["white", "black", "hispanic", "asian"], [0.25, 0.25, 0.25, 0.25]),
+}
+
+
+def _sample_eeo_race(race_proxy: str, rng: random.Random) -> str:
+    groups, weights = _EEO_RACE_GIVEN_PROXY.get(
+        race_proxy, _EEO_RACE_GIVEN_PROXY["other"]
+    )
+    return rng.choices(groups, weights=weights, k=1)[0]
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -88,6 +114,7 @@ def sample_identity(rng: random.Random) -> Identity:
         inferred_gender=gender,
         inferred_race_proxy=race_proxy,
         source=source,
+        eeo_race=_sample_eeo_race(race_proxy, rng),
     )
 
 
@@ -119,4 +146,5 @@ def sample_swappable_identity(rng: random.Random) -> Identity:
         inferred_gender=gender,
         inferred_race_proxy=race_proxy,
         source=source,
+        eeo_race=_sample_eeo_race(race_proxy, rng),
     )

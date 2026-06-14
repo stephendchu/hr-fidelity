@@ -36,8 +36,9 @@ def run_audit(
     *,
     drift_threshold: float = 0.05,
     four_fifths_axes: list[str] | None = None,
+    min_group_size: int = 1,
 ) -> AuditReport:
-    ff = four_fifths_check(scores, resumes, axes=four_fifths_axes)
+    ff = four_fifths_check(scores, resumes, axes=four_fifths_axes, min_group_size=min_group_size)
     dr = drift_check(scores, pairs, drift_threshold=drift_threshold)
 
     verdict: AuditVerdict = "CERTIFIED" if (ff.passed and dr.passed) else "BLOCKED"

@@ -9,6 +9,7 @@ class Identity:
     inferred_gender: Literal["M", "F"]
     inferred_race_proxy: str
     source: Literal["ssa", "census", "bertrand_mullainathan"]
+    eeo_race: str = ""  # synthetic self-reported EEO race; blank = not yet assigned
 
 
 @dataclass

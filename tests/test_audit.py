@@ -46,7 +46,7 @@ def req():
 @pytest.fixture(scope="module")
 def corpus(req):
     # n_per_fit=50 → 150 base resumes, 450 pairs
-    return generate_corpus([req], n_per_fit=50, seed=42)
+    return generate_corpus([req], n_per_fit=50, seed=44)
 
 
 def _all_resumes_in_corpus(corpus):

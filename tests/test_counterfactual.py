@@ -24,6 +24,7 @@ def _base_resume() -> Resume:
             inferred_gender="M",
             inferred_race_proxy="white",
             source="bertrand_mullainathan",
+            eeo_race="white",
         ),
         education=[Education(
             degree="BS",
