@@ -176,6 +176,14 @@ tr:last-child td { border-bottom:none; }
 footer { background:var(--dark); color:#6b7280; padding:2rem; text-align:center; font-size:.8rem; }
 footer a { color:#94a3b8; text-decoration:none; }
 
+/* How-to steps */
+.how-steps{display:flex;flex-direction:column;gap:1.75rem}
+.how-step{display:flex;gap:1.25rem;align-items:flex-start}
+.how-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:.85rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:.1rem}
+.how-title{font-size:.95rem;font-weight:700;margin-bottom:.35rem}
+.how-body{font-size:.875rem;color:#374151;line-height:1.65}
+.how-body strong{color:var(--dark)}
+
 /* Scope grid (replaces inline style for responsive override) */
 .scope-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto; }
 
@@ -348,11 +356,45 @@ footer a { color:#94a3b8; text-decoration:none; }
   </div>
 </section>
 
+<!-- How to use -->
+<section style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:3.5rem 2rem">
+  <div style="max-width:900px;margin:0 auto">
+    <div class="section-eyebrow" style="text-align:left">How recruiters use this</div>
+    <h2 style="font-size:clamp(1.5rem,2.5vw,2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:2rem">Three steps to a compliance-ready audit</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div>
+          <div class="how-title">Run the default audit</div>
+          <p class="how-body">Leave all knobs at their defaults and click <strong>Run audit</strong>. You'll see <strong>CERTIFIED</strong> — the screener is scoring on qualifications only, selection rates are even across groups, and it agrees with human recruiters. This is your baseline: a fair screener.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div>
+          <div class="how-title">Turn on name-based signals</div>
+          <p class="how-body">Toggle <strong>Name-based signals</strong> on and run again. The verdict flips to <strong>BLOCKED</strong>. The screener is now using applicant names as a proxy for race and gender — and the four-fifths ratios show it. Black and Hispanic applicants are advancing at less than 80% the rate of white applicants. That's an EEOC violation.</p>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div>
+          <div class="how-title">Tune your screener's configuration</div>
+          <p class="how-body">Try raising the <strong>Prestige bonus</strong> slider. Even without name signals, favouring elite-school graduates introduces proxy correlation — and the counterfactual drift check catches it. The knobs represent real configuration choices your AI vendor offers. The audit tells you which combinations are legally safe before a single real applicant is touched.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:2rem;padding:1rem 1.25rem;background:var(--blue-l);border:1px solid rgba(37,99,235,.2);border-radius:10px;font-size:.875rem;color:#1e40af;line-height:1.6">
+      <strong>The output is your compliance artifact.</strong> The CERTIFIED/BLOCKED verdict, the four-fifths ratios, and the drift measurements are exactly what NYC Local Law 144 requires you to document before deploying an automated hiring tool. Run this before the screener touches a live application — not after.
+    </div>
+  </div>
+</section>
+
 <!-- Live Audit -->
 <section class="audit-section" id="audit">
   <div class="section-eyebrow">Live demo</div>
-  <h2 class="section-title" style="margin-bottom:.5rem">Run a bias audit now</h2>
-  <p class="section-sub" style="margin-bottom:1.5rem">Configure the screener, click Run — see it certified or blocked in real time.</p>
+  <h2 class="section-title" style="margin-bottom:.5rem">Try it yourself</h2>
+  <p class="section-sub" style="margin-bottom:1.5rem">Start with defaults → Run audit → then toggle name-based signals and watch the verdict flip.</p>
 
   <div class="data-note">
     🔒 <span><strong>Synthetic data only</strong> — résumés generated from public name datasets. No real candidates. No employer records.</span>
