@@ -314,7 +314,7 @@ footer a { color:#94a3b8; text-decoration:none; }
   <h2 class="section-title">Three layers. One verdict.</h2>
   <p class="section-sub">HR Fidelity runs every screener through the same gauntlet regulators use, then issues a machine-readable certificate.</p>
   <div class="feat-grid">
-    <div class="feat-card"><div class="feat-icon icon-blue">⚖️</div><h3>Four-fifths disparate impact</h3><p>EEOC § 60-3.4 / NYC Local Law 144: any group selected at less than 80% of the top group's rate triggers a violation. Computed across race proxy and gender before any hire.</p></div>
+    <div class="feat-card"><div class="feat-icon icon-blue">⚖️</div><h3>Four-fifths disparate impact</h3><p>EEOC § 60-3.4 / NYC Local Law 144: any group selected at less than 80% of the top group's rate triggers a violation. Computed across name-based race signal and gender before any hire.</p></div>
     <div class="feat-card"><div class="feat-icon icon-green">🔀</div><h3>Counterfactual drift</h3><p>Every résumé gets a matched twin — identical content, one proxy signal swapped. If mean score drift exceeds 5%, the screener is blocked. No bias hides in identical pairs.</p></div>
     <div class="feat-card"><div class="feat-icon icon-amber">📏</div><h3>Recruiter–AI calibration (κ)</h3><p>Cohen's κ measures whether the AI and human recruiters agree on A/B pairs. κ ≥ 0.60 — "substantial" agreement — is required. Gold pairs act as attention checks.</p></div>
     <div class="feat-card"><div class="feat-icon icon-blue">🔒</div><h3>Synthetic-only data</h3><p>All résumés are 100% synthetic. Names from Bertrand-Mullainathan, SSA, and Census public datasets. No real candidates, no employer hiring records, no privacy risk.</p></div>
@@ -451,7 +451,7 @@ footer a { color:#94a3b8; text-decoration:none; }
           <div class="tog"><input type="checkbox" id="name-signal"><div class="tog-t"></div><div class="tog-th"></div></div>
           <span id="name-signal-label">Off — screener cannot see names</span>
         </label>
-        <div id="name-signal-hint" style="font-size:.76rem;color:#9ca3af;margin-top:.4rem">Simulates a screener using race/gender proxies from applicant names.</div>
+        <div id="name-signal-hint" style="font-size:.76rem;color:#9ca3af;margin-top:.4rem">Simulates a screener using applicant names to infer race and gender signals.</div>
       </div>
       <button class="run-btn" id="run-btn" onclick="runAudit()">Run audit</button>
     </div>
@@ -488,7 +488,7 @@ footer a { color:#94a3b8; text-decoration:none; }
     </div>
     <p>The rule catches <em>outcome gaps</em>, not intent. A screener can be completely "race-blind" in its inputs and still fail this test if its scoring produces unequal outcomes.</p>
     <div class="modal-verdict">
-      <strong>In this audit:</strong> This check runs across race-proxy groups. A ratio below 0.80 for any group triggers a <strong>BLOCKED</strong> verdict.
+      <strong>In this audit:</strong> This check runs across groups identified by name-based race signal and gender. A ratio below 0.80 for any group triggers a <strong>BLOCKED</strong> verdict.
     </div>
   </div>
 </div>
@@ -597,7 +597,7 @@ footer a { color:#94a3b8; text-decoration:none; }
     <button class="modal-close" onclick="document.getElementById('name-signal-modal').classList.remove('open')" aria-label="Close">✕</button>
     <div class="modal-tag">Demo feature</div>
     <h3>What are name-based signals?</h3>
-    <p>A <strong>race proxy</strong> is any piece of information that isn't race itself, but correlates with it — so a screener that reads it is effectively making race-based decisions without ever seeing a demographic field. The most common example is a person's name.</p>
+    <p>Résumés don't have a race field — applicants don't write their race on a CV. But a name carries that information implicitly. A <strong>name-based race signal</strong> is when an algorithm uses an applicant's name to infer their race and adjusts their score accordingly — making race-based decisions without ever seeing a demographic field.</p>
     <p>A name-based signal is when a hiring algorithm — intentionally or not — uses an applicant's <strong>name as a proxy for their race or gender</strong> and adjusts their score based on that.</p>
     <p>It works because names carry demographic information. Research shows that résumés with names commonly associated with Black applicants receive fewer callbacks than identical résumés with white-associated names — even when every other detail is the same.</p>
     <div class="modal-example">
@@ -706,7 +706,7 @@ wireSlider('advance-threshold', v => v.toFixed(2), v => {
 });
 document.getElementById('name-signal').addEventListener('change', e => {
   const on = e.target.checked;
-  document.getElementById('name-signal-label').textContent = on ? 'On — race/gender proxies active' : 'Off — screener cannot see names';
+  document.getElementById('name-signal-label').textContent = on ? 'On — name-based race and gender signals active' : 'Off — screener cannot see names';
   document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
 });
 
@@ -854,7 +854,7 @@ function renderResults(panel, audit, fidelity, scores) {
         else                 { d.style.opacity = '.18'; d.style.transform = 'scale(0.7)'; rej++; }
       });
       const sub = document.getElementById('pool-sub');
-      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by race proxy`;
+      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by name-inferred race signal`;
     };
     window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
   }
@@ -864,10 +864,16 @@ function renderResults(panel, audit, fidelity, scores) {
   const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
   mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144');
   const fft = mkTable(ffCard, ['Group','Rate bar','Sel. rate','Ratio']);
+  const fmtGroup = key => {
+    const [axis, grp] = key.split(':');
+    if (!grp) return key;
+    const axisLabel = axis === 'race_proxy' ? 'name signal' : axis === 'gender' ? 'name signal' : axis;
+    return `${grp} (${axisLabel})`;
+  };
   Object.entries(audit.four_fifths.ratios).forEach(([key, ratio]) => {
     const ok = ratio >= 0.8;
     const tr = fft.appendChild(document.createElement('tr'));
-    mkTD(tr, key).style.color = '#6b7280';
+    mkTD(tr, fmtGroup(key)).style.color = '#6b7280';
     const btd = tr.appendChild(document.createElement('td')); btd.style.padding = '0 1rem';
     const bw = btd.appendChild(document.createElement('div')); bw.className = 'bw';
     const bf = bw.appendChild(document.createElement('div')); bf.className = 'bf' + (ok ? '' : ' fail');
@@ -900,7 +906,7 @@ function renderResults(panel, audit, fidelity, scores) {
   }
   mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
   const PROTECTED = { race_proxy: true, gender: true };
-  const AXIS_LABEL = { race_proxy: 'race proxy', gender: 'gender', prestige_tier: 'school prestige' };
+  const AXIS_LABEL = { race_proxy: 'race (from name)', gender: 'gender (from name)', prestige_tier: 'school prestige' };
   const drt = mkTable(drCard, ['Axis','Type','Mean drift','Max drift','Flip rate']);
   Object.entries(audit.drift.axis_results).forEach(([axis, r]) => {
     const ok = r.mean_drift <= audit.drift.drift_threshold;
