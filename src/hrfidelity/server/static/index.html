@@ -792,6 +792,7 @@ document.getElementById('name-signal').addEventListener('change', e => {
     : 'Turn on to simulate a screener that learned to use applicant names as race and gender proxies — then watch the audit catch it.';
   document.getElementById('name-signal-hint').style.color  = on ? '#dc2626' : '#9ca3af';
   schedulePoolRefresh();
+  scheduleAuditRefresh();
 });
 
 // ── Pool refresh (re-scores when prestige/skills/name-signal change) ───────
@@ -806,10 +807,31 @@ function getConfig() {
 
 let _poolRefreshTimer = null;
 function schedulePoolRefresh() {
-  // No-op if no pool has been rendered yet
   if (!window._updatePool) return;
   clearTimeout(_poolRefreshTimer);
   _poolRefreshTimer = setTimeout(refreshPool, 350);
+}
+
+// ── Auto-run audit on config change (debounced) ───────────────────────────
+let _auditRefreshTimer = null;
+function scheduleAuditRefresh() {
+  // Only auto-run if results are already showing
+  const panel = document.getElementById('results-panel');
+  if (!panel || !panel.querySelector('.v-banner')) return;
+  clearTimeout(_auditRefreshTimer);
+  // Show subtle "Updating…" state while waiting
+  const existing = panel.querySelector('.auto-refresh-notice');
+  if (!existing) {
+    const notice = panel.insertBefore(document.createElement('div'), panel.firstChild);
+    notice.className = 'auto-refresh-notice';
+    notice.style.cssText = 'font-size:.75rem;color:#9ca3af;text-align:right;padding:.25rem .5rem .5rem;letter-spacing:.02em';
+    notice.textContent = 'Updating…';
+  }
+  _auditRefreshTimer = setTimeout(() => {
+    const n = panel.querySelector('.auto-refresh-notice');
+    if (n) n.remove();
+    runAudit();
+  }, 800);
 }
 
 async function refreshPool() {
@@ -846,9 +868,10 @@ async function refreshPool() {
   }
 }
 
-// Wire prestige and skills sliders to pool refresh on release
-['prestige-bonus', 'skills-weight'].forEach(id => {
-  document.getElementById(id).addEventListener('change', schedulePoolRefresh);
+// Sliders → pool refresh (fast) + full audit refresh (debounced)
+['prestige-bonus', 'skills-weight', 'advance-threshold'].forEach(id => {
+  document.getElementById(id).addEventListener('input',  schedulePoolRefresh);
+  document.getElementById(id).addEventListener('change', scheduleAuditRefresh);
 });
 
 // ── Jurisdiction badge sync ────────────────────────────────────────────────
@@ -858,7 +881,11 @@ function syncJurisdictionBadge() {
     b.classList.toggle('active', b.dataset.jx === jx);
   });
 }
-document.getElementById('jurisdiction-select').addEventListener('change', syncJurisdictionBadge);
+document.getElementById('jurisdiction-select').addEventListener('change', () => {
+  syncJurisdictionBadge();
+  scheduleAuditRefresh();
+});
+document.getElementById('req-select').addEventListener('change', scheduleAuditRefresh);
 syncJurisdictionBadge();
 
 // ── Load reqs ─────────────────────────────────────────────────────────────
