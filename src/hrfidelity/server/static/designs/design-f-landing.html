@@ -487,15 +487,19 @@ footer a { color:#94a3b8; text-decoration:none; }
     <button class="modal-close" onclick="document.getElementById('drift-modal').classList.remove('open')" aria-label="Close">✕</button>
     <div class="modal-tag">Bias probe</div>
     <h3>What is Counterfactual drift?</h3>
-    <p>Counterfactual drift measures whether the screener scores the <strong>same résumé differently depending on demographic signals</strong>.</p>
-    <p>For every candidate in the pool, the audit generates a matched twin: an identical résumé with one thing swapped — the name (a race/gender proxy), the school prestige tier, or a gender signal. Everything else — skills, experience, education level — stays exactly the same.</p>
+    <p>This check asks: does the screener give <strong>different scores to identical résumés</strong> when one detail is swapped? For every candidate, the audit creates a matched twin — same skills, same experience, same degree — but with one signal changed.</p>
+    <p>The score gap between twins is the <strong>drift</strong>. A fair screener should score them identically. Drift above 5% means the screener is using that signal to make decisions.</p>
+    <p>The audit measures drift on three axes — and they don't all carry the same legal weight:</p>
     <div class="modal-example">
-      <strong>Example:</strong> "Lakisha Washington, B.S. Computer Science, 5 years experience, Python/SQL/Docker" vs "Emily Walsh, B.S. Computer Science, 5 years experience, Python/SQL/Docker." If the screener gives these different scores, that gap is the drift.
+      <strong style="color:#7c3aed">⚖ Protected axes — legally significant</strong><br><br>
+      <strong>Race proxy</strong> — swaps the applicant's name between one associated with a white candidate and one associated with a Black candidate (Bertrand &amp; Mullainathan, 2004). Drift here means the screener is making decisions based on perceived race. This is a direct EEOC violation risk.<br><br>
+      <strong>Gender</strong> — swaps gender-signal names. Drift here indicates the screener is treating men and women differently for the same qualifications.
     </div>
-    <p>The audit measures <strong>mean drift</strong> across all pairs. A fair screener should score twins nearly identically. Drift above 5% (0.05) indicates the screener is using the swapped signal — which is a proxy for a protected characteristic — to make its decision.</p>
     <div class="modal-verdict">
-      <strong>In this audit:</strong> Drift is measured separately for name (race proxy), prestige tier, and gender signal. Mean drift above the threshold on any axis triggers a <strong>BLOCKED</strong> verdict.
+      <strong style="color:#92400e">⚠ Proxy axis — indirect risk</strong><br><br>
+      <strong>School prestige</strong> — swaps the institution tier (elite vs. regional school). Favouring Ivy League grads over state school grads is <em>not illegal on its own</em> — it's a legitimate hiring preference. But in the US, elite university attendance correlates strongly with race and family income. High prestige drift is a warning that this preference may be causing the race-based disparate impact the four-fifths check measures.
     </div>
+    <p style="margin-top:.75rem">Think of prestige drift as the <em>reason</em> behind a four-fifths failure — not a violation in itself.</p>
   </div>
 </div>
 
@@ -772,15 +776,19 @@ function renderResults(panel, audit, fidelity) {
   const drCard = mkCard(panel, '1rem');
   const drh = mkCh(drCard, 'Counterfactual drift', 'drift-modal'); mkPill(drh, audit.drift.passed);
   mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
-  const drt = mkTable(drCard, ['Axis','Mean drift','Max drift','Flip rate','Pairs']);
+  const PROTECTED = { race_proxy: true, gender: true };
+  const AXIS_LABEL = { race_proxy: 'race proxy', gender: 'gender', prestige_tier: 'school prestige' };
+  const drt = mkTable(drCard, ['Axis','Type','Mean drift','Max drift','Flip rate']);
   Object.entries(audit.drift.axis_results).forEach(([axis, r]) => {
     const ok = r.mean_drift <= audit.drift.drift_threshold;
+    const isProtected = PROTECTED[axis] || false;
     const tr = drt.appendChild(document.createElement('tr'));
-    mkTD(tr, axis);
+    mkTD(tr, AXIS_LABEL[axis] || axis);
+    const typeTd = mkTD(tr, isProtected ? 'Protected ⚖' : 'Proxy ⚠');
+    typeTd.style.cssText = 'font-size:.75rem;font-weight:600;color:' + (isProtected ? '#7c3aed' : '#92400e');
     mkTD(tr, r.mean_drift.toFixed(4)).className = 'nut ' + (ok ? 'gn' : 'rd');
     mkTD(tr, r.max_drift.toFixed(4)).className  = 'nut';
     mkTD(tr, (r.flip_rate*100).toFixed(1)+'%').className = 'nut';
-    mkTD(tr, String(r.n_pairs)).className = 'nut';
   });
 
   // Fidelity
