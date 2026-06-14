@@ -202,6 +202,41 @@ def create_app() -> FastAPI:
         )
         return _audit_to_dict(report)
 
+    @app.post("/api/scores")
+    async def scores(body: AuditRequest):
+        """Return individual candidate scores for pool visualization."""
+        req = _req_by_id().get(body.req_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail=f"req not found: {body.req_id!r}")
+
+        cfg = body.config
+        screener_config = ScreenerConfig(
+            prestige_bonus=cfg.prestige_bonus,
+            race_proxy_bias=_BIAS_RACE if cfg.name_signal else {},
+            gender_bias=_BIAS_GENDER if cfg.name_signal else {},
+            required_skill_weight=cfg.required_skill_weight,
+            nice_to_have_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
+            experience_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
+            threshold_advance=cfg.threshold_advance,
+        )
+
+        resumes, _ = _corpus_for_req(body.req_id)
+        scored = [rubric_screener.score(r, req, screener_config) for r in resumes]
+        resume_map = {r.candidate_id: r for r in resumes}
+
+        return [
+            {
+                "candidate_id": s.candidate_id,
+                "raw_score": round(s.raw_score, 4),
+                "verdict": s.verdict,
+                "race_proxy": resume_map[s.candidate_id].identity.inferred_race_proxy,
+                "gender": resume_map[s.candidate_id].identity.inferred_gender,
+                "latent_fit": resume_map[s.candidate_id].latent_fit,
+            }
+            for s in scored
+            if s.candidate_id in resume_map
+        ]
+
     @app.get("/api/fidelity/{req_id}")
     async def fidelity(req_id: str):
         req = _req_by_id().get(req_id)

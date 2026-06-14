@@ -177,6 +177,9 @@ tr:last-child td { border-bottom:none; }
 footer { background:var(--dark); color:#6b7280; padding:2rem; text-align:center; font-size:.8rem; }
 footer a { color:#94a3b8; text-decoration:none; }
 
+/* Candidate pool dots */
+.pool-dot{width:12px;height:12px;border-radius:50%;transition:opacity .25s,transform .25s;cursor:default;flex-shrink:0}
+
 /* Slider description */
 .slider-desc{font-size:.74rem;color:#9ca3af;margin-top:.35rem;min-height:1.1em;transition:color .15s}
 .slider-desc.warn{color:#b45309}
@@ -695,6 +698,7 @@ wireSlider('skills-weight', v => v.toFixed(2), v => {
 });
 
 wireSlider('advance-threshold', v => v.toFixed(2), v => {
+  if (window._updatePool) window._updatePool(v);
   if (v <= 0.45)  return { text: 'Low bar — most candidates who meet minimum requirements will advance', level: '' };
   if (v <= 0.60)  return { text: 'Moderate bar — roughly the top half of the pool advances', level: '' };
   if (v <= 0.75)  return { text: 'High bar — only well-qualified candidates advance to interview', level: '' };
@@ -746,13 +750,17 @@ async function runAudit() {
   ph.appendChild(document.createTextNode('Running audit…'));
 
   try {
-    const [ar, fr] = await Promise.all([
-      fetch('/api/audit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({req_id:reqId,config}) }),
+    const body = JSON.stringify({req_id:reqId,config});
+    const headers = {'Content-Type':'application/json'};
+    const [ar, fr, sr] = await Promise.all([
+      fetch('/api/audit',   { method:'POST', headers, body }),
       fetch('/api/fidelity/' + encodeURIComponent(reqId)),
+      fetch('/api/scores',  { method:'POST', headers, body }),
     ]);
     if (!ar.ok) throw new Error('Audit ' + ar.status);
     if (!fr.ok) throw new Error('Fidelity ' + fr.status);
-    renderResults(panel, await ar.json(), await fr.json());
+    if (!sr.ok) throw new Error('Scores ' + sr.status);
+    renderResults(panel, await ar.json(), await fr.json(), await sr.json());
   } catch(e) {
     panel.textContent = '';
     const err = panel.appendChild(document.createElement('div'));
@@ -764,7 +772,7 @@ async function runAudit() {
   }
 }
 
-function renderResults(panel, audit, fidelity) {
+function renderResults(panel, audit, fidelity, scores) {
   panel.textContent = '';
   const pass = audit.verdict === 'CERTIFIED';
 
@@ -798,6 +806,58 @@ function renderResults(panel, audit, fidelity) {
   const badge = vb.appendChild(document.createElement('div')); badge.className = 'v-badge' + (pass ? '' : ' blocked');
   const dot = badge.appendChild(document.createElement('div')); dot.className = 'vd';
   badge.appendChild(document.createTextNode(pass ? 'CERTIFIED' : 'BLOCKED'));
+
+  // Candidate pool visualization
+  if (scores && scores.length) {
+    const poolCard = mkCard(panel, '1rem');
+    const poolh = mkCh(poolCard, 'Candidate pool');
+    const poolSub = poolCard.appendChild(document.createElement('div'));
+    poolSub.className = 'sub-t';
+    poolSub.id = 'pool-sub';
+
+    const RACE_COLOR = { white:'#2563eb', black:'#dc2626', hispanic:'#d97706', asian:'#7c3aed', unknown:'#9ca3af' };
+
+    // Sort by score descending
+    const sorted = [...scores].sort((a,b) => b.raw_score - a.raw_score);
+
+    const poolWrap = poolCard.appendChild(document.createElement('div'));
+    poolWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin:.75rem 0 .5rem;';
+
+    sorted.forEach(c => {
+      const dot = poolWrap.appendChild(document.createElement('div'));
+      dot.className = 'pool-dot';
+      dot.dataset.score = c.raw_score;
+      dot.dataset.race = c.race_proxy;
+      dot.title = `Score: ${(c.raw_score*100).toFixed(0)} · ${c.race_proxy} · ${c.latent_fit}`;
+      const color = RACE_COLOR[c.race_proxy] || '#9ca3af';
+      dot.style.background = color;
+    });
+
+    const legend = poolCard.appendChild(document.createElement('div'));
+    legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:.6rem 1.25rem;margin-top:.6rem';
+    Object.entries(RACE_COLOR).forEach(([grp, col]) => {
+      const item = legend.appendChild(document.createElement('div'));
+      item.style.cssText = 'display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:#6b7280';
+      const swatch = item.appendChild(document.createElement('div'));
+      swatch.style.cssText = `width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0`;
+      item.appendChild(document.createTextNode(grp));
+    });
+
+    // Store scores globally for live threshold updates
+    window._poolScores = sorted;
+    window._updatePool = function(threshold) {
+      const dots = poolWrap.querySelectorAll('.pool-dot');
+      let adv = 0, rej = 0;
+      dots.forEach(d => {
+        const sc = parseFloat(d.dataset.score);
+        if (sc >= threshold) { d.style.opacity = '1'; d.style.transform = 'scale(1)'; adv++; }
+        else                 { d.style.opacity = '.18'; d.style.transform = 'scale(0.7)'; rej++; }
+      });
+      const sub = document.getElementById('pool-sub');
+      if (sub) sub.textContent = `${adv} advance · ${rej} filtered out at threshold ${threshold.toFixed(2)} · dots coloured by race proxy`;
+    };
+    window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
+  }
 
   // Four-fifths
   const ffCard = mkCard(panel, '1rem');
