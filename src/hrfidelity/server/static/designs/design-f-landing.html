@@ -176,6 +176,11 @@ tr:last-child td { border-bottom:none; }
 footer { background:var(--dark); color:#6b7280; padding:2rem; text-align:center; font-size:.8rem; }
 footer a { color:#94a3b8; text-decoration:none; }
 
+/* Slider description */
+.slider-desc{font-size:.74rem;color:#9ca3af;margin-top:.35rem;min-height:1.1em;transition:color .15s}
+.slider-desc.warn{color:#b45309}
+.slider-desc.danger{color:#dc2626}
+
 /* How-to steps */
 .how-steps{display:flex;flex-direction:column;gap:1.75rem}
 .how-step{display:flex;gap:1.25rem;align-items:flex-start}
@@ -424,14 +429,17 @@ footer a { color:#94a3b8; text-decoration:none; }
       <div class="ctrl">
         <label for="prestige-bonus" style="display:flex;align-items:center">Prestige bonus <button class="info-btn" onclick="document.getElementById('prestige-modal').classList.add('open')" aria-label="What is prestige bonus?">?</button></label>
         <div class="srow"><input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0"><span class="sv" id="prestige-bonus-val">0.00</span></div>
+        <div id="prestige-bonus-desc" class="slider-desc">No prestige weighting — all institutions scored equally</div>
       </div>
       <div class="ctrl">
         <label for="skills-weight" style="display:flex;align-items:center">Skills weight <button class="info-btn" onclick="document.getElementById('skills-modal').classList.add('open')" aria-label="What is skills weight?">?</button></label>
         <div class="srow"><input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
+        <div id="skills-weight-desc" class="slider-desc">Balanced — skills and experience weighted equally</div>
       </div>
       <div class="ctrl">
         <label for="advance-threshold" style="display:flex;align-items:center">Advance threshold <button class="info-btn" onclick="document.getElementById('threshold-modal').classList.add('open')" aria-label="What is advance threshold?">?</button></label>
         <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
+        <div id="advance-threshold-desc" class="slider-desc">Standard bar — top 30% of qualified candidates advance</div>
       </div>
       <div class="ctrl">
         <label style="display:flex;align-items:center">Name-based signals <button class="info-btn" onclick="document.getElementById('name-signal-modal').classList.add('open')" aria-label="What are name-based signals?">?</button></label>
@@ -531,7 +539,13 @@ footer a { color:#94a3b8; text-decoration:none; }
     <button class="modal-close" onclick="document.getElementById('prestige-modal').classList.remove('open')" aria-label="Close">✕</button>
     <div class="modal-tag">Bias knob</div>
     <h3>What is Prestige bonus?</h3>
-    <p>This slider lets a screener give <strong>extra points to candidates who attended elite universities</strong> — Ivy League, MIT, Stanford — and fewer points to candidates from regional or state schools.</p>
+    <p>This slider lets a screener give <strong>extra points to candidates who attended elite universities</strong> and fewer points to candidates from regional or state schools. The institutions fall into three tiers:</p>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;font-size:.84rem;margin:.75rem 0 1rem;align-items:baseline">
+      <strong style="color:#7c3aed">Tier 1</strong><span style="color:#374151">Ivy League, MIT, Stanford, Caltech — highly selective elite universities</span>
+      <strong style="color:#2563eb">Tier 2</strong><span style="color:#374151">Top 50 national universities — strong selective schools, well-resourced</span>
+      <strong style="color:#6b7280">Tier 3</strong><span style="color:#374151">State schools, regional universities, community colleges — the majority of US graduates</span>
+    </div>
+    <p>At bonus = 0, all tiers are scored equally. As the bonus rises, Tier 1 graduates gain points and Tier 3 graduates are penalised by the same amount.</p>
     <p>On its own, that might sound reasonable. The problem: in the US, elite university attendance correlates strongly with <strong>race and family income</strong>. A screener that rewards prestige ends up indirectly penalising applicants from underrepresented groups — even if it never looks at a single demographic field.</p>
     <div class="modal-example">
       <strong>Example:</strong> Two software engineers. Same skills, same years of experience, same job performance record. One graduated from MIT, one from a state school. A prestige bonus of 0.20 gives the MIT grad a 20-point head start before a single qualification is evaluated.
@@ -579,6 +593,7 @@ footer a { color:#94a3b8; text-decoration:none; }
     <button class="modal-close" onclick="document.getElementById('name-signal-modal').classList.remove('open')" aria-label="Close">✕</button>
     <div class="modal-tag">Demo feature</div>
     <h3>What are name-based signals?</h3>
+    <p>A <strong>race proxy</strong> is any piece of information that isn't race itself, but correlates with it — so a screener that reads it is effectively making race-based decisions without ever seeing a demographic field. The most common example is a person's name.</p>
     <p>A name-based signal is when a hiring algorithm — intentionally or not — uses an applicant's <strong>name as a proxy for their race or gender</strong> and adjusts their score based on that.</p>
     <p>It works because names carry demographic information. Research shows that résumés with names commonly associated with Black applicants receive fewer callbacks than identical résumés with white-associated names — even when every other detail is the same.</p>
     <div class="modal-example">
@@ -647,13 +662,43 @@ gsap.timeline({ scrollTrigger:{ trigger:'.cta-section', start:'top 75%' } })
   .to('.cta-actions',    { opacity:1, y:0, duration:.7, ease:'power2.out' }, '-=.3');
 
 // ── Slider wiring ─────────────────────────────────────────────────────────
-function wireSlider(id, fmt) {
-  const el = document.getElementById(id), vEl = document.getElementById(id+'-val');
-  if (el && vEl) el.addEventListener('input', () => vEl.textContent = fmt(parseFloat(el.value)));
+function wireSlider(id, fmt, descFn) {
+  const el   = document.getElementById(id);
+  const vEl  = document.getElementById(id + '-val');
+  const dEl  = document.getElementById(id + '-desc');
+  function update() {
+    const v = parseFloat(el.value);
+    if (vEl) vEl.textContent = fmt(v);
+    if (dEl && descFn) {
+      const { text, level } = descFn(v);
+      dEl.textContent = text;
+      dEl.className = 'slider-desc' + (level ? ' ' + level : '');
+    }
+  }
+  if (el) { el.addEventListener('input', update); update(); }
 }
-wireSlider('prestige-bonus',    v => v.toFixed(2));
-wireSlider('skills-weight',     v => v.toFixed(2));
-wireSlider('advance-threshold', v => v.toFixed(2));
+
+wireSlider('prestige-bonus', v => v.toFixed(2), v => {
+  if (v === 0)    return { text: 'No prestige weighting — all institutions scored equally', level: '' };
+  if (v <= 0.10)  return { text: 'Slight preference for Ivy League / elite universities (Tier 1)', level: '' };
+  if (v <= 0.20)  return { text: 'Moderate — Ivy League grads score noticeably higher than state school grads (Tier 3)', level: 'warn' };
+  if (v <= 0.35)  return { text: 'Strong — regional university graduates are significantly penalised vs. Ivy League', level: 'warn' };
+  return           { text: 'Heavy weighting — Ivy League grads get a major score boost; state school grads are penalised', level: 'danger' };
+});
+
+wireSlider('skills-weight', v => v.toFixed(2), v => {
+  if (v <= 0.35)  return { text: 'Experience-led — years in the role matters more than specific skills listed', level: '' };
+  if (v <= 0.55)  return { text: 'Balanced — skills and experience contribute roughly equally', level: '' };
+  if (v <= 0.70)  return { text: 'Skills-led — required skills match is the primary scoring factor', level: '' };
+  return           { text: 'Skills dominant — a missing required skill heavily penalises the candidate', level: 'warn' };
+});
+
+wireSlider('advance-threshold', v => v.toFixed(2), v => {
+  if (v <= 0.45)  return { text: 'Low bar — most candidates who meet minimum requirements will advance', level: '' };
+  if (v <= 0.60)  return { text: 'Moderate bar — roughly the top half of the pool advances', level: '' };
+  if (v <= 0.75)  return { text: 'High bar — only well-qualified candidates advance to interview', level: '' };
+  return           { text: 'Very high bar — few candidates clear this; small pool amplifies any score gaps', level: 'warn' };
+});
 document.getElementById('name-signal').addEventListener('change', e => {
   const on = e.target.checked;
   document.getElementById('name-signal-label').textContent = on ? 'On — race/gender proxies active' : 'Off — screener cannot see names';
