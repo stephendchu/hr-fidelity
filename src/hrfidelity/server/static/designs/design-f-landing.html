@@ -380,15 +380,15 @@ footer a { color:#94a3b8; text-decoration:none; }
         <select id="req-select"></select>
       </div>
       <div class="ctrl">
-        <label for="prestige-bonus">Prestige bonus</label>
+        <label for="prestige-bonus" style="display:flex;align-items:center">Prestige bonus <button class="info-btn" onclick="document.getElementById('prestige-modal').classList.add('open')" aria-label="What is prestige bonus?">?</button></label>
         <div class="srow"><input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0"><span class="sv" id="prestige-bonus-val">0.00</span></div>
       </div>
       <div class="ctrl">
-        <label for="skills-weight">Skills weight</label>
+        <label for="skills-weight" style="display:flex;align-items:center">Skills weight <button class="info-btn" onclick="document.getElementById('skills-modal').classList.add('open')" aria-label="What is skills weight?">?</button></label>
         <div class="srow"><input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
       </div>
       <div class="ctrl">
-        <label for="advance-threshold">Advance threshold</label>
+        <label for="advance-threshold" style="display:flex;align-items:center">Advance threshold <button class="info-btn" onclick="document.getElementById('threshold-modal').classList.add('open')" aria-label="What is advance threshold?">?</button></label>
         <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
       </div>
       <div class="ctrl">
@@ -420,6 +420,54 @@ footer a { color:#94a3b8; text-decoration:none; }
 </section>
 
 <footer>HR Fidelity v0.1 &nbsp;·&nbsp; Built with synthetic data only — no real candidates &nbsp;·&nbsp; <a href="https://github.com/stephendchu/hr-fidelity">GitHub</a></footer>
+
+<!-- Prestige bonus modal -->
+<div class="modal-overlay" id="prestige-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('prestige-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Bias knob</div>
+    <h3>What is Prestige bonus?</h3>
+    <p>This slider lets a screener give <strong>extra points to candidates who attended elite universities</strong> — Ivy League, MIT, Stanford — and fewer points to candidates from regional or state schools.</p>
+    <p>On its own, that might sound reasonable. The problem: in the US, elite university attendance correlates strongly with <strong>race and family income</strong>. A screener that rewards prestige ends up indirectly penalising applicants from underrepresented groups — even if it never looks at a single demographic field.</p>
+    <div class="modal-example">
+      <strong>Example:</strong> Two software engineers. Same skills, same years of experience, same job performance record. One graduated from MIT, one from a state school. A prestige bonus of 0.20 gives the MIT grad a 20-point head start before a single qualification is evaluated.
+    </div>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Drag this above 0 and run the audit. The counterfactual drift check will detect that otherwise-identical résumés are scored differently based on institution tier, and may issue a <strong>BLOCKED</strong> verdict.
+    </div>
+  </div>
+</div>
+
+<!-- Skills weight modal -->
+<div class="modal-overlay" id="skills-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('skills-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Scoring knob</div>
+    <h3>What is Skills weight?</h3>
+    <p>Every screener has to decide how much to weigh different parts of a résumé. This slider controls <strong>how much of the final score comes from matching required skills</strong> versus other factors like years of experience.</p>
+    <p>At <strong>0.60</strong> (the default), 60% of the score is based on skills match, 40% on experience. Higher values make skills the dominant factor; lower values give more weight to experience.</p>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> This knob is a legitimate scoring choice with no built-in bias. It's here to show that a screener has many tuning levers — and that the audit checks the <em>output</em> for disparate impact regardless of which levers are used.
+    </div>
+  </div>
+</div>
+
+<!-- Advance threshold modal -->
+<div class="modal-overlay" id="threshold-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('threshold-modal').classList.remove('open')" aria-label="Close">✕</button>
+    <div class="modal-tag">Scoring knob</div>
+    <h3>What is Advance threshold?</h3>
+    <p>After the screener scores each résumé from 0–100, it needs a cut-off to decide who moves forward. The advance threshold is <strong>the minimum score a candidate needs to be recommended for interview</strong>.</p>
+    <p>At <strong>0.70</strong>, a candidate needs to score 70 or above to advance. Candidates between 0.40 and 0.70 are flagged as borderline. Below 0.40 is a reject.</p>
+    <div class="modal-example">
+      <strong>Why it matters for bias:</strong> A higher threshold means fewer people advance overall. If the screener already has score gaps between demographic groups, raising the bar amplifies those gaps — a smaller pool means the disparate impact ratio gets worse.
+    </div>
+    <div class="modal-verdict">
+      <strong>In this demo:</strong> Try raising this to 0.80 with name-based signals on. Fewer candidates clear the bar, and the selection rate gap between groups widens further.
+    </div>
+  </div>
+</div>
 
 <!-- Name-signal explainer modal -->
 <div class="modal-overlay" id="name-signal-modal" onclick="if(event.target===this)this.classList.remove('open')">
