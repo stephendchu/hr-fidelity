@@ -2,9 +2,11 @@
 Layer 3 audit — counterfactual drift check.
 
 For each matched pair (base, twin), compute the absolute score difference.
-If mean drift on any axis exceeds drift_threshold, the screener is BLOCKED.
-A fair screener scores pairs identically (drift = 0); any non-zero drift
-means the screener treats identical candidates differently based on a proxy.
+If mean drift on a PROTECTED axis exceeds drift_threshold, the screener is BLOCKED.
+Prestige tier is a proxy warning axis — drift is measured and reported, but
+does not independently block certification (the four-fifths check catches the
+downstream disparate impact if prestige preference correlates with race).
+A fair screener scores pairs identically (drift = 0).
 """
 from __future__ import annotations
 
@@ -22,13 +24,18 @@ class DriftResult:
     drift_threshold: float
 
 
+# Axes where drift constitutes a legal violation risk (protected characteristics).
+# prestige_tier is a proxy warning — reported but does not independently block.
+_PROTECTED_AXES = {"race_proxy", "gender"}
+
+
 def drift_check(
     scores: list[Score],
     pairs: list[CounterfactualPair],
     *,
     drift_threshold: float = 0.05,
 ) -> DriftResult:
-    """Return DriftResult; failed if mean drift on any axis > drift_threshold."""
+    """Return DriftResult; failed if mean drift on a protected axis > drift_threshold."""
     score_map = {s.candidate_id: s for s in scores}
 
     by_axis: dict[str, list[tuple[float, float, bool]]] = {}
@@ -56,11 +63,11 @@ def drift_check(
             "flip_rate": flip_rate,
             "n_pairs": len(entries),
         }
-        if mean_drift > drift_threshold:
+        if axis in _PROTECTED_AXES and mean_drift > drift_threshold:
             failures.append(f"{axis}: mean_drift={mean_drift:.3f}")
 
     passed = not failures
-    detail = "no significant drift" if passed else f"drift violations: {failures}"
+    detail = "no significant drift on protected axes" if passed else f"drift violations: {failures}"
     return DriftResult(
         passed=passed,
         axis_results=axis_results,

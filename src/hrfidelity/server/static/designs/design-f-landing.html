@@ -132,6 +132,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; h
 .vd { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.7); }
 .pass-pill { background:#dcfce7; color:#16a34a; border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
 .fail-pill { background:#fee2e2; color:var(--red); border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
+.warn-pill { background:#fef3c7; color:#92400e; border-radius:99px; padding:.2rem .7rem; font-size:.74rem; font-weight:700; }
 .ch { display:flex; align-items:center; justify-content:space-between; margin-bottom:.65rem; }
 .ch h3 { font-size:.95rem; font-weight:700; }
 .sub-t { font-size:.76rem; color:#9ca3af; margin-bottom:.5rem; }
@@ -817,9 +818,26 @@ function renderResults(panel, audit, fidelity) {
     mkTD(tr, ratio.toFixed(2)).className = 'nut ' + (ok ? 'gn' : 'rd');
   });
 
-  // Drift
+  // Drift — pass/warn/fail based on whether violations are on protected axes
+  const PROTECTED_AXES = new Set(['race_proxy', 'gender']);
   const drCard = mkCard(panel, '1rem');
-  const drh = mkCh(drCard, 'Counterfactual drift', 'drift-modal'); mkPill(drh, audit.drift.passed);
+  const drh = mkCh(drCard, 'Counterfactual drift', 'drift-modal');
+  const drAxisResults = audit.drift.axis_results;
+  const hasProtectedDrift = Object.entries(drAxisResults).some(
+    ([ax, r]) => PROTECTED_AXES.has(ax) && r.mean_drift > audit.drift.drift_threshold
+  );
+  const hasProxyDrift = Object.entries(drAxisResults).some(
+    ([ax, r]) => !PROTECTED_AXES.has(ax) && r.mean_drift > audit.drift.drift_threshold
+  );
+  if (audit.drift.passed && !hasProxyDrift) {
+    mkPill(drh, true);
+  } else if (!audit.drift.passed || hasProtectedDrift) {
+    mkPill(drh, false);
+  } else {
+    // proxy-only drift — warn but don't fail
+    const s = drh.appendChild(document.createElement('span'));
+    s.className = 'warn-pill'; s.textContent = '⚠ Proxy warning';
+  }
   mkSub(drCard, 'Threshold: mean drift ≤ ' + audit.drift.drift_threshold);
   const PROTECTED = { race_proxy: true, gender: true };
   const AXIS_LABEL = { race_proxy: 'race proxy', gender: 'gender', prestige_tier: 'school prestige' };
