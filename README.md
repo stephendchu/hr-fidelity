@@ -22,18 +22,39 @@ The screener is not the hard part. The evaluation layer is.
 
 ## The evaluation pipeline
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  LAYER 3 — AUDIT       four-fifths disparate impact     │
-│                        counterfactual drift probe       │
-├─────────────────────────────────────────────────────────┤
-│  LAYER 2 — FIDELITY    blind A/B vs recruiters (κ)      │
-├─────────────────────────────────────────────────────────┤
-│  LAYER 1 — SCREENER    scores résumés vs a job req      │
-└─────────────────────────────────────────────────────────┘
+The screener is the **subject under test**. The pipeline takes its scores as input and runs three independent checks before issuing a verdict.
+
+```mermaid
+flowchart TD
+    R[Resume pool\n150 synthetic résumés]
+    Q[Job requisition\nrequired skills · scoring rubric]
+
+    R --> SCREEN
+    Q --> SCREEN
+
+    SCREEN["LAYER 1 — SCREENER  ·  subject under test\n\nscore(resume, req, config) → Score\n\nKnobs: prestige bonus · name-based signals · skills weight · advance threshold"]
+
+    SCREEN -->|"150 base scores"| FF
+    SCREEN -->|"450 matched-pair scores"| CD
+    SCREEN -->|"20 A/B pair scores"| KA
+
+    subgraph AUDIT["LAYER 3 — AUDIT"]
+        FF["Four-fifths disparate impact\nEEOC § 60-3.4 / NYC LL 144\nratio ≥ 0.80 per demographic group"]
+        CD["Counterfactual drift\nproxy-signal detection\nmean score drift ≤ 0.05 across matched pairs"]
+        KA["Recruiter–AI agreement\nCohen's κ ≥ 0.60\nblind A/B vs 3 synthetic recruiters"]
+    end
+
+    FF --> GATE
+    CD --> GATE
+    KA --> GATE
+
+    GATE{All three checks pass?}
+
+    GATE -->|Yes| CERT["✅  CERTIFIED\nScreener cleared for deployment"]
+    GATE -->|No|  BLOCK["🚫  BLOCKED\nWhich check failed · which proxy caused it · plain-English reason"]
 ```
 
-Each layer feeds the next. The screener's output flows into the fidelity layer (does it agree with calibrated human judgment?) and the audit layer (does it produce disparate outcomes across protected groups?). The combination — not any single check — is what makes the verdict defensible.
+The audit layer is screener-agnostic — it receives scores and measures their properties. Swap the rubric for an LLM, a fine-tuned classifier, or a third-party vendor API behind the `score(resume, req, config) → Score` interface and the audit runs unchanged.
 
 **Four-fifths disparate impact (EEOC § 60-3.4 / NYC LL 144 / California FEHA):** any demographic group selected at less than 80% of the top group's rate triggers a violation. Measured from synthetic self-reported EEO race — the same basis real HR compliance uses, not name inference. Groups below the statistical minimum sample size are shown in the table but excluded from the verdict.
 
