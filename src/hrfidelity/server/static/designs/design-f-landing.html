@@ -920,13 +920,11 @@ function renderResults(panel, audit, fidelity, scores) {
   // Four-fifths
   const ffCard = mkCard(panel, '1rem');
   const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
-  mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144');
+  mkSub(ffCard, 'Threshold: ratio ≥ 0.80 · EEOC / NYC Local Law 144 · groups identified from applicant names (synthetic EEO data)');
   const fft = mkTable(ffCard, ['Group','Rate bar','Sel. rate','Ratio']);
   const fmtGroup = key => {
-    const [axis, grp] = key.split(':');
-    if (!grp) return key;
-    const axisLabel = axis === 'race_proxy' ? 'name signal' : axis === 'gender' ? 'name signal' : axis;
-    return `${grp} (${axisLabel})`;
+    const [, grp] = key.split(':');
+    return grp || key;
   };
   Object.entries(audit.four_fifths.ratios).forEach(([key, ratio]) => {
     const ok = ratio >= 0.8;
