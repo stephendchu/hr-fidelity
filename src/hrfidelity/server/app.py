@@ -17,6 +17,7 @@ from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from hrfidelity.audit.report import AuditReport, run_audit
@@ -154,6 +155,7 @@ def _fidelity_to_dict(report: FidelityReport) -> dict:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="HR Fidelity", version="0.1.0")
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
     @app.get("/", response_class=HTMLResponse)
     async def root():

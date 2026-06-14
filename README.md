@@ -2,7 +2,9 @@
 
 > **Can you trust the AI reading your résumés?**
 
-**[→ Live demo: hr-fidelity-schu.fly.dev](https://hr-fidelity-schu.fly.dev)**
+[![Live demo](https://img.shields.io/badge/Live%20demo-hr--fidelity--schu.fly.dev-2563eb?style=for-the-badge)](https://hr-fidelity-schu.fly.dev)
+
+[![](src/hrfidelity/server/static/designs/design-f-full.png)](https://hr-fidelity-schu.fly.dev)
 
 An integrated AI governance evaluation pipeline for resume screeners. The system combines disparate impact analysis, proxy-signal detection, counterfactual testing, recruiter calibration, and deployment gating into a single reproducible workflow — issuing a machine-readable CERTIFIED or BLOCKED verdict before the screener touches a live application.
 
