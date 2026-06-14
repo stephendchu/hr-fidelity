@@ -186,8 +186,10 @@ tr:last-child td { border-bottom:none; }
 .reg-strip { background:var(--dark); border-top:1px solid rgba(255,255,255,.06); padding:1.75rem 2rem; text-align:center; }
 .reg-strip-label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#4b5563; margin-bottom:.85rem; }
 .reg-badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.6rem; }
-.reg-badge { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(255,255,255,.1); border-radius:99px; padding:.3rem .85rem; font-size:.75rem; color:#9ca3af; font-weight:500; }
+.reg-badge { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(255,255,255,.1); border-radius:99px; padding:.3rem .85rem; font-size:.75rem; color:#9ca3af; font-weight:500; transition:border-color .2s,color .2s; }
 .reg-badge svg { flex-shrink:0; opacity:.6; }
+.reg-badge.active { border-color:rgba(212,168,83,.5); color:#d4a853; }
+.reg-badge.active svg { opacity:1; stroke:#d4a853; }
 
 /* Footer */
 footer { background:var(--dark); color:#6b7280; padding:1.5rem 2rem; text-align:center; font-size:.8rem; border-top:1px solid rgba(255,255,255,.05); }
@@ -258,6 +260,8 @@ footer a { color:#94a3b8; text-decoration:none; }
   .vh-metrics { width:100%; justify-content:space-between; }
   .kg { grid-template-columns:1fr 1fr; }
   table { display:block; overflow-x:auto; }
+  .cfg-label-col { min-width:160px; }
+  .cfg-value-col { text-align:right; white-space:nowrap; padding-left:.75rem; }
   .cta-section { padding:4rem 1.25rem; }
   .cta-actions { flex-direction:column; align-items:stretch; }
   .cta-actions .btn-primary, .cta-actions .btn-ghost { width:100%; text-align:center; }
@@ -455,6 +459,14 @@ footer a { color:#94a3b8; text-decoration:none; }
     <div class="card">
       <div class="card-title">Screener configuration</div>
       <div class="ctrl">
+        <label for="jurisdiction-select">Jurisdiction</label>
+        <select id="jurisdiction-select">
+          <option value="nyc">NYC Local Law 144</option>
+          <option value="ca">California FEHA</option>
+          <option value="federal">Federal EEOC</option>
+        </select>
+      </div>
+      <div class="ctrl">
         <label for="req-select">Job requisition</label>
         <select id="req-select"></select>
       </div>
@@ -503,16 +515,16 @@ footer a { color:#94a3b8; text-decoration:none; }
 
 <div class="reg-strip">
   <div class="reg-strip-label">Regulatory Frameworks Referenced</div>
-  <div class="reg-badges">
-    <span class="reg-badge">
+  <div class="reg-badges" id="reg-badges">
+    <span class="reg-badge" data-jx="federal">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
       EEOC Uniform Guidelines — Four-Fifths Rule
     </span>
-    <span class="reg-badge">
+    <span class="reg-badge" data-jx="nyc">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
       NYC Local Law 144 (2023)
     </span>
-    <span class="reg-badge">
+    <span class="reg-badge" data-jx="ca">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4.5" stroke="#6b7280"/><path d="M5 2v3.5l2 1.5" stroke="#6b7280" stroke-linecap="round"/></svg>
       California FEHA / CRD AI Employment Guidance
     </span>
@@ -817,6 +829,16 @@ async function refreshPool() {
   document.getElementById(id).addEventListener('change', schedulePoolRefresh);
 });
 
+// ── Jurisdiction badge sync ────────────────────────────────────────────────
+function syncJurisdictionBadge() {
+  const jx = (document.getElementById('jurisdiction-select') || {}).value || 'nyc';
+  document.querySelectorAll('.reg-badge[data-jx]').forEach(b => {
+    b.classList.toggle('active', b.dataset.jx === jx);
+  });
+}
+document.getElementById('jurisdiction-select').addEventListener('change', syncJurisdictionBadge);
+syncJurisdictionBadge();
+
 // ── Load reqs ─────────────────────────────────────────────────────────────
 async function loadReqs() {
   try {
@@ -1014,11 +1036,35 @@ function renderResults(panel, audit, fidelity, scores) {
     window._updatePool(parseFloat(document.getElementById('advance-threshold').value));
   }
 
-  // Screener configuration
-  if (audit.screener_config) {
+  // Jurisdiction-aware rendering
+  const jurisdiction = (document.getElementById('jurisdiction-select') || {}).value || 'nyc';
+  const JX = {
+    nyc:     { label: 'NYC Local Law 144',       cite: 'EEOC § 60-3.4 / NYC Local Law 144',         showCfg: true,  cfgNote: 'Required for NYC LL 144 documentation — must be disclosed with bias audit results' },
+    ca:      { label: 'California FEHA',          cite: 'EEOC § 60-3.4 / California FEHA (CRD)',     showCfg: false, cfgNote: '' },
+    federal: { label: 'Federal EEOC',             cite: 'EEOC Uniform Guidelines § 60-3.4',          showCfg: false, cfgNote: '' },
+  };
+  const jx = JX[jurisdiction] || JX.nyc;
+
+  // Screener configuration card — NYC only (LL 144 requires documenting tested config)
+  if (audit.screener_config && jx.showCfg) {
     const cfgCard = mkCard(panel, '1rem');
-    mkCh(cfgCard, 'Screener configuration tested');
-    mkSub(cfgCard, 'Exact settings submitted to the audit — required for NYC LL 144 documentation');
+    // Collapsible — LL 144 paper trail but not the main result
+    const cfgHead = cfgCard.appendChild(document.createElement('div'));
+    cfgHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none';
+    const cfgTitle = cfgHead.appendChild(document.createElement('div'));
+    cfgTitle.className = 'card-title'; cfgTitle.style.marginBottom = '0';
+    cfgTitle.textContent = 'Screener configuration tested';
+    const cfgToggle = cfgHead.appendChild(document.createElement('span'));
+    cfgToggle.style.cssText = 'font-size:.75rem;color:#9ca3af;margin-left:1rem';
+    cfgToggle.textContent = '▸ expand';
+    const cfgBody = cfgCard.appendChild(document.createElement('div'));
+    cfgBody.style.display = 'none';
+    cfgHead.addEventListener('click', () => {
+      const open = cfgBody.style.display !== 'none';
+      cfgBody.style.display = open ? 'none' : '';
+      cfgToggle.textContent = open ? '▸ expand' : '▾ collapse';
+    });
+    mkSub(cfgBody, jx.cfgNote);
     const sc = audit.screener_config;
     const cfgRows = [
       ['Required skills weight',  (sc.required_skill_weight * 100).toFixed(0) + '%'],
@@ -1028,11 +1074,11 @@ function renderResults(panel, audit, fidelity, scores) {
       ['Prestige bonus',          sc.prestige_bonus > 0 ? '+' + (sc.prestige_bonus * 100).toFixed(0) + '%' : 'Off'],
       ['Name-based signals',      sc.name_signal ? '⚠ ON — race/gender bias applied' : 'Off'],
     ];
-    const cfgt = mkTable(cfgCard, ['Setting', 'Value']);
+    const cfgt = mkTable(cfgBody, ['Setting', 'Value']);
     cfgRows.forEach(([label, val]) => {
       const tr = cfgt.appendChild(document.createElement('tr'));
-      mkTD(tr, label).style.color = '#6b7280';
-      const vtd = mkTD(tr, val);
+      const ltd = mkTD(tr, label); ltd.style.color = '#6b7280'; ltd.className = 'cfg-label-col';
+      const vtd = mkTD(tr, val);  vtd.className = 'cfg-value-col';
       if (label === 'Name-based signals' && sc.name_signal) vtd.style.color = '#dc2626';
     });
   }
@@ -1041,7 +1087,7 @@ function renderResults(panel, audit, fidelity, scores) {
   const ffCard = mkCard(panel, '1rem');
   const ffh = mkCh(ffCard, 'Four-fifths disparate impact', 'fourfifths-modal'); mkPill(ffh, audit.four_fifths.passed);
   const minN = audit.four_fifths.stat_min_n || 1;
-  mkSub(ffCard, `Source: self-reported race/ethnicity (EEO form) — not name-inferred · ratio ≥ 0.80 required · EEOC / NYC Local Law 144 · groups with fewer than ${minN} applicants shown but excluded from verdict`);
+  mkSub(ffCard, `Source: self-reported race/ethnicity (EEO form) — not name-inferred · ratio ≥ 0.80 required · ${jx.cite} · groups with fewer than ${minN} applicants shown but excluded from verdict`);
   const fft = mkTable(ffCard, ['Group (EEO)','Rate bar','Sel. rate','Ratio / status']);
   // Show ALL groups sorted by name; dim those below stat threshold
   const ffGroups = [...audit.four_fifths.groups].sort((a,b) => a.group.localeCompare(b.group));
