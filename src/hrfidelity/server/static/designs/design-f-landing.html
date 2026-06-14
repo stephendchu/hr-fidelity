@@ -180,13 +180,16 @@ footer a { color:#94a3b8; text-decoration:none; }
 .scope-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; max-width:1100px; margin:0 auto; }
 
 /* Info modal */
-.info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.7rem;font-weight:700;border:none;cursor:pointer;line-height:1;vertical-align:middle;margin-left:.35rem;flex-shrink:0;transition:background .15s}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--muted);font-size:.72rem;font-weight:700;border:none;cursor:pointer;line-height:1;vertical-align:middle;margin-left:.4rem;flex-shrink:0;transition:background .15s;
+  /* expand tap target without changing visual size */
+  position:relative}
+.info-btn::before{content:'';position:absolute;inset:-10px}
 .info-btn:hover{background:#d1d5db;color:var(--dark)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal-box{background:#fff;border-radius:16px;padding:2rem 2rem 1.75rem;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.18);position:relative;transform:translateY(12px);transition:transform .2s}
+.modal-box{background:#fff;border-radius:16px;padding:2rem 2rem 1.75rem;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.18);position:relative;transform:translateY(12px);transition:transform .2s}
 .modal-overlay.open .modal-box{transform:translateY(0)}
-.modal-close{position:absolute;top:1rem;right:1rem;background:var(--border);border:none;border-radius:50%;width:28px;height:28px;font-size:.9rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--border);border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .modal-close:hover{background:#d1d5db}
 .modal-tag{display:inline-block;background:#fef3c7;color:#92400e;border-radius:99px;padding:.2rem .75rem;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1rem}
 .modal-box h3{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem}
@@ -195,6 +198,12 @@ footer a { color:#94a3b8; text-decoration:none; }
 .modal-example{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#7f1d1d;line-height:1.6}
 .modal-example strong{color:#991b1b}
 .modal-verdict{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.85rem 1rem;margin:.85rem 0;font-size:.84rem;color:#14532d;line-height:1.6}
+/* Bottom sheet on mobile */
+@media(max-width:640px){
+  .modal-overlay{align-items:flex-end;padding:0}
+  .modal-box{border-radius:20px 20px 0 0;max-width:100%;max-height:85vh;padding:1.5rem 1.25rem 2rem}
+  .modal-close{width:40px;height:40px;font-size:1.1rem}
+}
 
 /* ── Mobile (≤640px) ── */
 @media(max-width:640px){
