@@ -28,22 +28,22 @@ The screener is the **subject under test**. The pipeline takes its scores as inp
 
 ```mermaid
 flowchart TD
-    R[Resume pool\n150 synthetic résumés]
-    Q[Job requisition\nrequired skills · scoring rubric]
+    R["Resume pool — 150 synthetic resumes"]
+    Q["Job requisition — required skills + scoring rubric"]
 
     R --> SCREEN
     Q --> SCREEN
 
-    SCREEN["LAYER 1 — SCREENER  ·  subject under test\n\nscore(resume, req, config) → Score\n\nKnobs: prestige bonus · name-based signals · skills weight · advance threshold"]
+    SCREEN["LAYER 1 — SCREENER  (subject under test)\nscore(resume, req, config) → Score\nKnobs: prestige bonus · name-based signals · skills weight · advance threshold"]
 
     SCREEN -->|"150 base scores"| FF
     SCREEN -->|"450 matched-pair scores"| CD
     SCREEN -->|"20 A/B pair scores"| KA
 
     subgraph AUDIT["LAYER 3 — AUDIT"]
-        FF["Four-fifths disparate impact\nEEOC § 60-3.4 / NYC LL 144\nratio ≥ 0.80 per demographic group"]
-        CD["Counterfactual drift\nproxy-signal detection\nmean score drift ≤ 0.05 across matched pairs"]
-        KA["Recruiter–AI agreement\nCohen's κ ≥ 0.60\nblind A/B vs 3 synthetic recruiters"]
+        FF["Four-fifths disparate impact\nEEOC 60-3.4 / NYC LL 144\nratio >= 0.80 per demographic group"]
+        CD["Counterfactual drift\nproxy-signal detection\nmean score drift <= 0.05 across matched pairs"]
+        KA["Recruiter-AI agreement\nCohen's kappa >= 0.60\nblind A/B vs 3 synthetic recruiters"]
     end
 
     FF --> GATE
@@ -52,8 +52,8 @@ flowchart TD
 
     GATE{All three checks pass?}
 
-    GATE -->|Yes| CERT["✅  CERTIFIED\nScreener cleared for deployment"]
-    GATE -->|No|  BLOCK["🚫  BLOCKED\nWhich check failed · which proxy caused it · plain-English reason"]
+    GATE -->|Yes| CERT["CERTIFIED — screener cleared for deployment"]
+    GATE -->|No|  BLOCK["BLOCKED — which check failed, which proxy caused it"]
 ```
 
 The audit layer is screener-agnostic — it receives scores and measures their properties. Swap the rubric for an LLM, a fine-tuned classifier, or a third-party vendor API behind the `score(resume, req, config) → Score` interface and the audit runs unchanged.
