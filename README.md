@@ -137,6 +137,12 @@ ANTHROPIC_API_KEY=... .venv/bin/python scripts/llm_error_demo.py     # the failu
 
 **[→ Full Phoenix write-up](docs/phoenix-observability.md)**
 
+> **Live demo note:** the public site serves the LLM screener from a committed
+> snapshot of real Claude Haiku scores (`data/llm_scores/`), so it shows genuine
+> model output at $0 with no API key on the server. Because the prompt is blind,
+> each candidate's score is a stable constant — captured once. Regenerate with
+> `scripts/gen_llm_scores.py` if the corpus or model changes.
+
 ---
 
 ## Build status

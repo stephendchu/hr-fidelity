@@ -9,6 +9,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import random
@@ -58,15 +59,31 @@ def _corpus_for_req(req_id: str) -> tuple[list[Resume], list[CounterfactualPair]
     return resumes, pairs
 
 
+_LLM_SCORES_DIR = _DATA_ROOT / "llm_scores"
+
+
+def _llm_fixture_path(req_id: str) -> pathlib.Path:
+    return _LLM_SCORES_DIR / f"{req_id}.json"
+
+
 @lru_cache(maxsize=None)
 def _llm_raw_scores(req_id: str) -> dict[str, float]:
-    """Score every corpus resume (bases + twins) with the LLM screener, ONCE.
+    """Raw LLM scores for every corpus resume (bases + twins), by candidate_id.
 
-    The LLM prompt is blind to identity, so raw scores do not depend on the
-    bias knobs — only the verdict threshold does. Caching means one batch of
-    API calls per req per server lifetime. Exceptions are not cached, so a
-    failed run (e.g. missing key) retries on the next request.
+    Served from a committed fixture when present (data/llm_scores/<req_id>.json).
+    The prompt is blind to identity, so a candidate's raw score is a stable
+    constant — captured once, this lets the public demo show real Claude Haiku
+    output at $0 with no API key on the server.
+
+    When the fixture is missing (local dev, or a new req) it falls back to live
+    API calls if a key is available; regenerate fixtures with
+    scripts/gen_llm_scores.py. The prompt being blind, raw scores never depend on
+    the bias knobs — only the verdict threshold does.
     """
+    fixture = _llm_fixture_path(req_id)
+    if fixture.exists():
+        return {cid: float(v) for cid, v in json.loads(fixture.read_text()).items()}
+
     req = _req_by_id()[req_id]
     resumes, pairs = _corpus_for_req(req_id)
     all_map: dict[str, Resume] = {r.candidate_id: r for r in resumes}
@@ -78,10 +95,13 @@ def _llm_raw_scores(req_id: str) -> dict[str, float]:
 def _make_scorer(req: Req, cfg: AuditConfigIn):
     """Return a callable score(resume) -> Score for the selected screener."""
     if cfg.screener == "llm":
-        if not os.environ.get("ANTHROPIC_API_KEY"):
+        if not _llm_fixture_path(req.id).exists() and not os.environ.get("ANTHROPIC_API_KEY"):
             raise HTTPException(
                 status_code=503,
-                detail="LLM screener requires ANTHROPIC_API_KEY; not configured on this server.",
+                detail=(
+                    "LLM screener needs a cached score fixture or ANTHROPIC_API_KEY; "
+                    "neither is available on this server."
+                ),
             )
         raw = _llm_raw_scores(req.id)
         t_adv, t_bord = cfg.threshold_advance, 0.4

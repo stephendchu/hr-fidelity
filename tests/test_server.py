@@ -259,8 +259,17 @@ async def test_pairs_unknown_req_returns_404(client):
 # ── LLM screener routing ──────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_audit_llm_without_key_returns_503(client, monkeypatch):
+async def test_audit_llm_without_key_or_fixture_returns_503(client, monkeypatch):
+    """503 only when there is neither a committed fixture nor a live API key."""
+    import pathlib
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # Make _llm_fixture_path return a path that doesn't exist so the fixture
+    # check fails, exercising the no-fixture-no-key 503 path.
+    monkeypatch.setattr(
+        app_module,
+        "_llm_fixture_path",
+        lambda _req_id: pathlib.Path("/nonexistent/llm_scores.json"),
+    )
     reqs = (await client.get("/api/reqs")).json()
     req_id = reqs[0]["id"]
     r = await client.post("/api/audit", json={
