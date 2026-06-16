@@ -27,6 +27,21 @@ def _get_client():
     return anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 
+def _tracer():
+    """Return an OTel tracer, or None if tracing is not installed.
+
+    We open our OWN span (rather than annotating the active span) because the
+    AnthropicInstrumentor's LLM span only exists *during* messages.create();
+    outside it the current span is non-recording, so set_attributes is dropped.
+    Our span becomes the parent and the LLM span nests beneath it.
+    """
+    try:
+        from opentelemetry import trace as otel_trace
+    except ImportError:
+        return None
+    return otel_trace.get_tracer("hrfidelity.screener")
+
+
 def _build_prompt(resume: Resume, req: Req) -> str:
     exp_lines = "\n".join(
         f"- {e.title} at {e.company} ({e.start[:4]}–{e.end[:4] if e.end else 'present'}): "
@@ -78,6 +93,23 @@ def _parse_response(text: str) -> dict[str, Any]:
 
 
 def score(resume: Resume, req: Req, config: ScreenerConfig = _FAIR) -> Score:
+    tracer = _tracer()
+    if tracer is None:
+        return _score(resume, req, config, span=None)
+    with tracer.start_as_current_span("screen_resume") as span:
+        return _score(resume, req, config, span=span)
+
+
+def _score(resume: Resume, req: Req, config: ScreenerConfig, span: Any) -> Score:
+    if span is not None:
+        span.set_attributes({
+            "hr_fidelity.req_id":       req.id,
+            "hr_fidelity.req_title":    req.title,
+            "hr_fidelity.candidate_id": resume.candidate_id,
+            "hr_fidelity.latent_fit":   resume.latent_fit,
+            "hr_fidelity.screener":     "llm",
+        })
+
     client = _get_client()
     prompt = _build_prompt(resume, req)
 
@@ -96,6 +128,12 @@ def score(resume: Resume, req: Req, config: ScreenerConfig = _FAIR) -> Score:
         verdict = "borderline"
     else:
         verdict = "reject"
+
+    if span is not None:
+        span.set_attributes({
+            "hr_fidelity.raw_score": raw_score,
+            "hr_fidelity.verdict":   verdict,
+        })
 
     return Score(
         candidate_id=resume.candidate_id,

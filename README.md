@@ -94,6 +94,51 @@ Any pair whose job-relevant hash differs is rejected before it enters the corpus
 
 ---
 
+## Observability & evals (Arize Phoenix)
+
+The LLM screener (M5) runs under [Arize Phoenix](https://github.com/Arize-ai/phoenix)
+tracing via OpenTelemetry. Tracing alone just proves the wiring works — the point
+is what runs *on top of* the traces: **evaluations**.
+
+**Blind-invariance fairness eval, as a Phoenix experiment.** The counterfactual
+drift check (Layer 3) is expressed as a Phoenix *experiment* over a dataset of
+résumé twins. For each pair the screener scores base and twin via Claude Haiku,
+and a code evaluator gates on `|Δ| ≤ 0.05`. Every call is auto-instrumented, so
+each eval row links straight to its LLM trace.
+
+![Phoenix experiment — blind-invariance fairness eval](docs/phoenix-experiments-list.png)
+
+Result: `blind_invariant = 1.00` across all axes (race proxy, gender, prestige),
+at both score extremes (reject 0.28 → 0.28, advance 0.92 → 0.92). A screener that
+never sees identity cannot drift on identity — the expected, desirable behavior of
+a properly blinded screener, now measured *inside the eval tool*.
+
+![Phoenix experiment — per-pair results](docs/phoenix-blind-invariance-experiment.png)
+
+**Failure-mode tracing (supporting).** The observability layer also distinguishes
+*kinds* of failure with debuggable detail — each a real Anthropic API rejection
+with a `request_id` (returned before generation, so $0). Spans turn red with the
+exception recorded on both the `screen_resume` span and the nested LLM call. Click
+through to the captured detail for each:
+
+- [`404 not_found_error`](docs/phoenix-error-404.png) — retired/wrong model id
+- [`401 authentication_error`](docs/phoenix-error-401.png) — bad API key
+- [`400 invalid_request_error`](docs/phoenix-error-400.png) — malformed request (empty content)
+
+![Phoenix — error taxonomy](docs/phoenix-error-taxonomy.png)
+
+Reproduce locally:
+
+```bash
+python -m phoenix.server.main serve                                  # collector at :6006
+ANTHROPIC_API_KEY=... .venv/bin/python scripts/blind_invariance_experiment.py  # the fairness eval
+ANTHROPIC_API_KEY=... .venv/bin/python scripts/llm_error_demo.py     # the failure taxonomy
+```
+
+**[→ Full Phoenix write-up](docs/phoenix-observability.md)**
+
+---
+
 ## Build status
 
 | Milestone | Status | What |
@@ -103,16 +148,16 @@ Any pair whose job-relevant hash differs is rejected before it enters the corpus
 | M3 — Fidelity layer | ✅ | Blind A/B pairing · Cohen's κ · Fleiss' κ · gold pair accuracy |
 | M4 — Certification dashboard | ✅ | FastAPI server · live config knobs · CERTIFIED/BLOCKED verdict · deployed |
 | M5 — LLM screener | ✅ | Swap rubric for Claude (Haiku) behind the same interface · blind prompt · emergent bias visible in audit |
-| M6 — Pair comparison UI | ⬜ | Side-by-side counterfactual pairs showing identical résumés scored differently |
-| M7 — Methodology page | ⬜ | GitHub Pages explainer — statistical choices, regulatory citations, Bertrand-Mullainathan grounding |
+| M6 — Pair comparison UI | ✅ | Side-by-side counterfactual pairs showing identical résumés scored differently |
+| M7 — Methodology page | ✅ | GitHub Pages explainer — statistical choices, regulatory citations, Bertrand-Mullainathan grounding |
 
-**249 tests passing, 0 failures.**
+**259 tests passing, 0 failures.**
 
 ---
 
 ## Stack
 
-- **Python 3.12** — FastAPI, uvicorn, pytest (249 tests), httpx
+- **Python 3.12** — FastAPI, uvicorn, pytest (259 tests), httpx
 - **Statistics** — Cohen's κ, Fleiss' κ, EEOC four-fifths ratio, counterfactual mean drift
 - **Frontend** — vanilla JS, GSAP 3 (hero animations, ScrollTrigger, mouse parallax), no framework
 - **Deploy** — Docker, Fly.io (`shared-cpu-1x`, 256 MB)

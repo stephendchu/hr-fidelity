@@ -27,8 +27,8 @@ from hrfidelity.data.schema import CounterfactualPair, Resume
 from hrfidelity.fidelity.calibration import run_calibration, simulate_human_vote
 from hrfidelity.fidelity.pairs import generate_fidelity_pairs
 from hrfidelity.fidelity.protocol import FidelityReport
-from hrfidelity.screener import rubric_screener
-from hrfidelity.screener.protocol import ScreenerConfig
+from hrfidelity.screener import llm_screener, rubric_screener
+from hrfidelity.screener.protocol import Score, ScreenerConfig
 
 _DATA_ROOT = pathlib.Path(__file__).parents[3] / "data"
 _STATIC_DIR = pathlib.Path(__file__).parent / "static"
@@ -58,6 +58,53 @@ def _corpus_for_req(req_id: str) -> tuple[list[Resume], list[CounterfactualPair]
     return resumes, pairs
 
 
+@lru_cache(maxsize=None)
+def _llm_raw_scores(req_id: str) -> dict[str, float]:
+    """Score every corpus resume (bases + twins) with the LLM screener, ONCE.
+
+    The LLM prompt is blind to identity, so raw scores do not depend on the
+    bias knobs — only the verdict threshold does. Caching means one batch of
+    API calls per req per server lifetime. Exceptions are not cached, so a
+    failed run (e.g. missing key) retries on the next request.
+    """
+    req = _req_by_id()[req_id]
+    resumes, pairs = _corpus_for_req(req_id)
+    all_map: dict[str, Resume] = {r.candidate_id: r for r in resumes}
+    for p in pairs:
+        all_map.setdefault(p.twin.candidate_id, p.twin)
+    return {cid: llm_screener.score(r, req).raw_score for cid, r in all_map.items()}
+
+
+def _make_scorer(req: Req, cfg: AuditConfigIn):
+    """Return a callable score(resume) -> Score for the selected screener."""
+    if cfg.screener == "llm":
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            raise HTTPException(
+                status_code=503,
+                detail="LLM screener requires ANTHROPIC_API_KEY; not configured on this server.",
+            )
+        raw = _llm_raw_scores(req.id)
+        t_adv, t_bord = cfg.threshold_advance, 0.4
+
+        def llm_score(r: Resume) -> Score:
+            rs = raw.get(r.candidate_id, 0.0)
+            v = "advance" if rs >= t_adv else "borderline" if rs >= t_bord else "reject"
+            return Score(candidate_id=r.candidate_id, req_id=req.id,
+                         verdict=v, rationale="", raw_score=rs)
+        return llm_score
+
+    sc = ScreenerConfig(
+        prestige_bonus=cfg.prestige_bonus,
+        race_proxy_bias=_BIAS_RACE if cfg.name_signal else {},
+        gender_bias=_BIAS_GENDER if cfg.name_signal else {},
+        required_skill_weight=cfg.required_skill_weight,
+        nice_to_have_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
+        experience_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
+        threshold_advance=cfg.threshold_advance,
+    )
+    return lambda r: rubric_screener.score(r, req, sc)
+
+
 # ── Pydantic request/response models ─────────────────────────────────────────
 
 class AuditConfigIn(BaseModel):
@@ -65,6 +112,7 @@ class AuditConfigIn(BaseModel):
     name_signal: bool = False
     required_skill_weight: float = 0.6
     threshold_advance: float = 0.7
+    screener: str = "rubric"  # "rubric" | "llm"
 
 
 class AuditRequest(BaseModel):
@@ -187,16 +235,7 @@ def create_app() -> FastAPI:
         if req is None:
             raise HTTPException(status_code=404, detail=f"req not found: {body.req_id!r}")
 
-        cfg = body.config
-        screener_config = ScreenerConfig(
-            prestige_bonus=cfg.prestige_bonus,
-            race_proxy_bias=_BIAS_RACE if cfg.name_signal else {},
-            gender_bias=_BIAS_GENDER if cfg.name_signal else {},
-            required_skill_weight=cfg.required_skill_weight,
-            nice_to_have_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
-            experience_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
-            threshold_advance=cfg.threshold_advance,
-        )
+        scorer = _make_scorer(req, body.config)
 
         resumes, pairs = _corpus_for_req(body.req_id)
 
@@ -206,7 +245,7 @@ def create_app() -> FastAPI:
             all_resume_map.setdefault(p.twin.candidate_id, p.twin)
         all_resumes = list(all_resume_map.values())
 
-        scores = [rubric_screener.score(r, req, screener_config) for r in all_resumes]
+        scores = [scorer(r) for r in all_resumes]
 
         report = run_audit(
             scores,
@@ -225,19 +264,10 @@ def create_app() -> FastAPI:
         if req is None:
             raise HTTPException(status_code=404, detail=f"req not found: {body.req_id!r}")
 
-        cfg = body.config
-        screener_config = ScreenerConfig(
-            prestige_bonus=cfg.prestige_bonus,
-            race_proxy_bias=_BIAS_RACE if cfg.name_signal else {},
-            gender_bias=_BIAS_GENDER if cfg.name_signal else {},
-            required_skill_weight=cfg.required_skill_weight,
-            nice_to_have_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
-            experience_weight=round((1.0 - cfg.required_skill_weight) * 0.5, 4),
-            threshold_advance=cfg.threshold_advance,
-        )
+        scorer = _make_scorer(req, body.config)
 
         resumes, _ = _corpus_for_req(body.req_id)
-        scored = [rubric_screener.score(r, req, screener_config) for r in resumes]
+        scored = [scorer(r) for r in resumes]
         resume_map = {r.candidate_id: r for r in resumes}
 
         return [
@@ -254,6 +284,71 @@ def create_app() -> FastAPI:
             for s in scored
             if s.candidate_id in resume_map
         ]
+
+    @app.post("/api/pairs")
+    async def pairs(body: AuditRequest):
+        """Return the top counterfactual pairs by score divergence for the current config."""
+        req = _req_by_id().get(body.req_id)
+        if req is None:
+            raise HTTPException(status_code=404, detail=f"req not found: {body.req_id!r}")
+
+        scorer = _make_scorer(req, body.config)
+
+        _, cf_pairs = _corpus_for_req(body.req_id)
+
+        AXIS_LABELS = {
+            "gender":        "Gender signal (name swap)",
+            "race_proxy":    "Race proxy (name swap)",
+            "prestige_tier": "Prestige tier (institution swap)",
+        }
+        AXIS_ORDER = ["race_proxy", "gender", "prestige_tier"]
+
+        results = []
+        for p in cf_pairs:
+            base_score = scorer(p.base)
+            twin_score = scorer(p.twin)
+            delta = twin_score.raw_score - base_score.raw_score
+            results.append({
+                "axis":        p.axis,
+                "axis_label":  AXIS_LABELS.get(p.axis, p.axis),
+                "delta":       round(delta, 4),
+                "abs_delta":   round(abs(delta), 4),
+                "base": {
+                    "name":         f"{p.base.identity.first_name} {p.base.identity.last_name}",
+                    "race_proxy":   p.base.identity.inferred_race_proxy,
+                    "gender":       p.base.identity.inferred_gender,
+                    "institution":  p.base.education[0].institution if p.base.education else "",
+                    "prestige_tier": p.base.education[0].prestige_tier if p.base.education else 0,
+                    "skills":       p.base.skills[:6],
+                    "raw_score":    round(base_score.raw_score, 4),
+                    "verdict":      base_score.verdict,
+                },
+                "twin": {
+                    "name":         f"{p.twin.identity.first_name} {p.twin.identity.last_name}",
+                    "race_proxy":   p.twin.identity.inferred_race_proxy,
+                    "gender":       p.twin.identity.inferred_gender,
+                    "institution":  p.twin.education[0].institution if p.twin.education else "",
+                    "prestige_tier": p.twin.education[0].prestige_tier if p.twin.education else 0,
+                    "skills":       p.twin.skills[:6],
+                    "raw_score":    round(twin_score.raw_score, 4),
+                    "verdict":      twin_score.verdict,
+                },
+            })
+
+        # Sort: protected axes first (race_proxy, gender), then prestige; within each by |delta| desc
+        results.sort(key=lambda r: (AXIS_ORDER.index(r["axis"]) if r["axis"] in AXIS_ORDER else 99, -r["abs_delta"]))
+
+        # Return top 2 per axis (up to 6 total)
+        seen: dict[str, int] = {}
+        top: list[dict] = []
+        for r in results:
+            if seen.get(r["axis"], 0) < 2:
+                top.append(r)
+                seen[r["axis"]] = seen.get(r["axis"], 0) + 1
+            if len(top) >= 6:
+                break
+
+        return top
 
     @app.get("/api/fidelity/{req_id}")
     async def fidelity(req_id: str):

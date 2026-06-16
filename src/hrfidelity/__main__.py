@@ -3,6 +3,8 @@ import argparse
 import os
 import uvicorn
 
+from hrfidelity.tracing import setup_tracing
+
 
 def main():
     parser = argparse.ArgumentParser(prog="hrfidelity")
@@ -14,6 +16,7 @@ def main():
     args = parser.parse_args()
 
     if args.cmd == "serve":
+        setup_tracing()
         uvicorn.run(
             "hrfidelity.server.app:create_app",
             host=args.host,

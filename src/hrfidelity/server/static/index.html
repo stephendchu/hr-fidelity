@@ -212,6 +212,34 @@ footer a { color:#94a3b8; text-decoration:none; }
 /* Candidate pool dots */
 .pool-dot{width:12px;height:12px;border-radius:50%;transition:opacity .25s,transform .25s;cursor:default;flex-shrink:0}
 
+/* Counterfactual pair cards */
+.pairs-section-hd{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:1.5rem 0 .75rem}
+.pair-group{margin-bottom:1.25rem}
+.pair-axis-tag{display:inline-flex;align-items:center;gap:.35rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-radius:99px;padding:.2rem .7rem;margin-bottom:.6rem}
+.pair-axis-tag.race_proxy{background:#fef3c7;color:#92400e}
+.pair-axis-tag.gender{background:#ede9fe;color:#6d28d9}
+.pair-axis-tag.prestige_tier{background:#e0f2fe;color:#0369a1}
+.pair-row{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;margin-bottom:.5rem}
+.pair-side{}
+.pair-name{font-size:.88rem;font-weight:700;color:var(--dark);margin-bottom:.25rem}
+.pair-score-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem}
+.pair-score-num{font-size:1.1rem;font-weight:800;min-width:2.8rem}
+.pair-score-bar{flex:1;height:5px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+.pair-score-fill{height:100%;border-radius:99px;transition:width .3s}
+.pair-verdict{font-size:.67rem;font-weight:700;border-radius:99px;padding:.1rem .5rem;display:inline-block}
+.pair-verdict.advance{background:#dcfce7;color:#16a34a}
+.pair-verdict.borderline{background:#fef3c7;color:#92400e}
+.pair-verdict.reject{background:#fee2e2;color:#dc2626}
+.pair-middle{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:0 .25rem}
+.pair-delta-val{font-size:.85rem;font-weight:800}
+.pair-delta-val.pos{color:#16a34a}
+.pair-delta-val.neg{color:#dc2626}
+.pair-delta-val.zero{color:#9ca3af}
+.pair-arrow{font-size:1rem;color:#d1d5db}
+.pair-skills{margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.25rem}
+.pair-skill-chip{font-size:.64rem;background:#f3f4f6;color:#6b7280;border-radius:4px;padding:.1rem .4rem}
+@media(max-width:600px){.pair-row{grid-template-columns:1fr;gap:.75rem}.pair-middle{flex-direction:row;justify-content:center}}
+
 /* Slider description */
 .slider-desc{font-size:.74rem;color:#9ca3af;margin-top:.35rem;min-height:1.1em;transition:color .15s}
 .slider-desc.warn{color:#b45309}
@@ -490,18 +518,31 @@ footer a { color:#94a3b8; text-decoration:none; }
         <select id="req-select"></select>
       </div>
       <div class="ctrl">
+        <label for="screener-select">Screener under test</label>
+        <select id="screener-select">
+          <option value="rubric">Rubric (deterministic)</option>
+          <option value="llm">LLM — Claude Haiku (blind)</option>
+        </select>
+        <div id="screener-note" style="display:none;font-size:.74rem;color:#b45309;margin-top:.4rem;line-height:1.5">
+          The LLM scores from a blind prompt — it never sees names, so the bias
+          knobs below have no effect on it. Scores are computed live via the
+          Anthropic API and cached per requisition. Auto-run is off in this
+          mode; press <strong>Run audit</strong> to score.
+        </div>
+      </div>
+      <div class="ctrl">
         <label for="prestige-bonus" style="display:flex;align-items:center">Prestige bonus <button class="info-btn" onclick="document.getElementById('prestige-modal').classList.add('open')" aria-label="What is prestige bonus?">?</button></label>
         <div class="srow"><input type="range" id="prestige-bonus" min="0" max="0.5" step="0.05" value="0"><span class="sv" id="prestige-bonus-val">0.00</span></div>
         <div id="prestige-bonus-desc" class="slider-desc">No prestige weighting — all institutions scored equally</div>
       </div>
       <div class="ctrl">
         <label for="skills-weight" style="display:flex;align-items:center">Skills weight <button class="info-btn" onclick="document.getElementById('skills-modal').classList.add('open')" aria-label="What is skills weight?">?</button></label>
-        <div class="srow"><input type="range" id="skills-weight" min="0.3" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
+        <div class="srow"><input type="range" id="skills-weight" min="0.1" max="0.9" step="0.05" value="0.6"><span class="sv" id="skills-weight-val">0.60</span></div>
         <div id="skills-weight-desc" class="slider-desc">Balanced — skills and experience weighted equally</div>
       </div>
       <div class="ctrl">
         <label for="advance-threshold" style="display:flex;align-items:center">Advance threshold <button class="info-btn" onclick="document.getElementById('threshold-modal').classList.add('open')" aria-label="What is advance threshold?">?</button></label>
-        <div class="srow"><input type="range" id="advance-threshold" min="0.4" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
+        <div class="srow"><input type="range" id="advance-threshold" min="0.1" max="0.9" step="0.05" value="0.7"><span class="sv" id="advance-threshold-val">0.70</span></div>
         <div id="advance-threshold-desc" class="slider-desc">Standard bar — top 30% of qualified candidates advance</div>
       </div>
       <div class="ctrl">
@@ -796,18 +837,26 @@ document.getElementById('name-signal').addEventListener('change', e => {
 });
 
 // ── Pool refresh (re-scores when prestige/skills/name-signal change) ───────
+function currentScreener() {
+  return (document.getElementById('screener-select') || {}).value || 'rubric';
+}
+
 function getConfig() {
   return {
     prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
     name_signal:           document.getElementById('name-signal').checked,
     required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
     threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
+    screener:              currentScreener(),
   };
 }
 
 let _poolRefreshTimer = null;
 function schedulePoolRefresh() {
   if (!window._updatePool) return;
+  // LLM scores are blind to the bias knobs and cost API calls — never refetch
+  // on a slider drag. The threshold slider updates the pool locally instead.
+  if (currentScreener() === 'llm') return;
   clearTimeout(_poolRefreshTimer);
   _poolRefreshTimer = setTimeout(refreshPool, 350);
 }
@@ -815,6 +864,8 @@ function schedulePoolRefresh() {
 // ── Auto-run audit on config change (debounced) ───────────────────────────
 let _auditRefreshTimer = null;
 function scheduleAuditRefresh() {
+  // Never auto-run the LLM screener — each run costs API calls. Explicit only.
+  if (currentScreener() === 'llm') return;
   // Only auto-run if results are already showing
   const panel = document.getElementById('results-panel');
   if (!panel || !panel.querySelector('.v-banner')) return;
@@ -886,6 +937,15 @@ document.getElementById('jurisdiction-select').addEventListener('change', () => 
   scheduleAuditRefresh();
 });
 document.getElementById('req-select').addEventListener('change', scheduleAuditRefresh);
+
+// ── Screener selector ──────────────────────────────────────────────────────
+document.getElementById('screener-select').addEventListener('change', e => {
+  const isLLM = e.target.value === 'llm';
+  document.getElementById('screener-note').style.display = isLLM ? 'block' : 'none';
+  // Switching screeners changes scores; for rubric we can auto-refresh, for
+  // LLM the user must press Run (guarded inside scheduleAuditRefresh).
+  if (!isLLM) { schedulePoolRefresh(); scheduleAuditRefresh(); }
+});
 syncJurisdictionBadge();
 
 // ── Load reqs ─────────────────────────────────────────────────────────────
@@ -909,12 +969,8 @@ async function loadReqs() {
 // ── Run audit ─────────────────────────────────────────────────────────────
 async function runAudit() {
   const reqId  = document.getElementById('req-select').value;
-  const config = {
-    prestige_bonus:        parseFloat(document.getElementById('prestige-bonus').value),
-    name_signal:           document.getElementById('name-signal').checked,
-    required_skill_weight: parseFloat(document.getElementById('skills-weight').value),
-    threshold_advance:     parseFloat(document.getElementById('advance-threshold').value),
-  };
+  const config = getConfig();
+  const isLLM  = config.screener === 'llm';
   const btn   = document.getElementById('run-btn');
   btn.disabled = true; btn.textContent = 'Computing…';
 
@@ -925,32 +981,40 @@ async function runAudit() {
   ph.style.cssText = 'text-align:center;padding:3rem';
   const sp = ph.appendChild(document.createElement('div'));
   sp.style.cssText = 'display:inline-block;width:24px;height:24px;border:3px solid #e8eaed;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.75rem';
-  ph.appendChild(document.createTextNode('Running audit…'));
+  ph.appendChild(document.createTextNode(isLLM
+    ? 'Scoring with Claude Haiku — first run scores the full corpus and may take a minute…'
+    : 'Running audit…'));
 
   try {
     const body = JSON.stringify({req_id:reqId,config});
     const headers = {'Content-Type':'application/json'};
-    const [ar, fr, sr] = await Promise.all([
+    const [ar, fr, sr, pr] = await Promise.all([
       fetch('/api/audit',   { method:'POST', headers, body }),
       fetch('/api/fidelity/' + encodeURIComponent(reqId)),
       fetch('/api/scores',  { method:'POST', headers, body }),
+      fetch('/api/pairs',   { method:'POST', headers, body }),
     ]);
-    if (!ar.ok) throw new Error('Audit ' + ar.status);
+    if (!ar.ok) {
+      let detail = 'Audit ' + ar.status;
+      try { const j = await ar.json(); if (j.detail) detail = j.detail; } catch (_) {}
+      throw new Error(detail);
+    }
     if (!fr.ok) throw new Error('Fidelity ' + fr.status);
     if (!sr.ok) throw new Error('Scores ' + sr.status);
-    renderResults(panel, await ar.json(), await fr.json(), await sr.json());
+    const pairsData = pr.ok ? await pr.json() : [];
+    renderResults(panel, await ar.json(), await fr.json(), await sr.json(), pairsData);
   } catch(e) {
     panel.textContent = '';
     const err = panel.appendChild(document.createElement('div'));
     err.className = 'card';
     err.style.cssText = 'padding:2rem;color:#dc2626;text-align:center';
-    err.textContent = 'Error: ' + e.message + ' — is the server running at localhost:8000?';
+    err.textContent = 'Error: ' + e.message;
   } finally {
     btn.disabled = false; btn.textContent = 'Run audit';
   }
 }
 
-function renderResults(panel, audit, fidelity, scores) {
+function renderResults(panel, audit, fidelity, scores, pairs) {
   panel.textContent = '';
   const pass = audit.verdict === 'CERTIFIED';
 
@@ -1210,6 +1274,89 @@ function renderResults(panel, audit, fidelity, scores) {
   const s1 = ka.appendChild(document.createElement('span')); s1.textContent = '−1.0';
   const s2 = ka.appendChild(document.createElement('span')); s2.className = 't'; s2.textContent = '0.60 threshold';
   const s3 = ka.appendChild(document.createElement('span')); s3.textContent = '1.0';
+
+  // ── Counterfactual pair comparison ──────────────────────────────────────
+  if (pairs && pairs.length) {
+    const pHd = panel.appendChild(document.createElement('div'));
+    pHd.className = 'pairs-section-hd';
+    pHd.textContent = 'Counterfactual pairs — identical resumes, one signal swapped';
+
+    const AXIS_ORDER = ['race_proxy', 'gender', 'prestige_tier'];
+    const grouped = {};
+    AXIS_ORDER.forEach(a => { grouped[a] = []; });
+    pairs.forEach(p => { if (grouped[p.axis]) grouped[p.axis].push(p); });
+
+    const AXIS_LABEL = { race_proxy:'Race proxy (name swap)', gender:'Gender (name swap)', prestige_tier:'Prestige tier (institution swap)' };
+
+    AXIS_ORDER.forEach(axis => {
+      const axPairs = grouped[axis];
+      if (!axPairs.length) return;
+
+      const grp = panel.appendChild(document.createElement('div'));
+      grp.className = 'pair-group';
+
+      const tag = grp.appendChild(document.createElement('div'));
+      tag.className = 'pair-axis-tag ' + axis;
+      tag.textContent = AXIS_LABEL[axis] || axis;
+
+      axPairs.forEach(p => {
+        const row = grp.appendChild(document.createElement('div'));
+        row.className = 'pair-row';
+
+        function mkSide(data) {
+          const side = row.appendChild(document.createElement('div'));
+          side.className = 'pair-side';
+          const nm = side.appendChild(document.createElement('div'));
+          nm.className = 'pair-name'; nm.textContent = data.name;
+
+          const sr2 = side.appendChild(document.createElement('div'));
+          sr2.className = 'pair-score-row';
+          const sn = sr2.appendChild(document.createElement('div'));
+          sn.className = 'pair-score-num';
+          sn.textContent = (data.raw_score * 100).toFixed(0);
+          const bar = sr2.appendChild(document.createElement('div'));
+          bar.className = 'pair-score-bar';
+          const fill = bar.appendChild(document.createElement('div'));
+          fill.className = 'pair-score-fill';
+          fill.style.width = (data.raw_score * 100).toFixed(1) + '%';
+          fill.style.background = data.verdict === 'advance' ? '#22c55e' : data.verdict === 'borderline' ? '#f59e0b' : '#ef4444';
+
+          const vd = side.appendChild(document.createElement('div'));
+          vd.className = 'pair-verdict ' + data.verdict;
+          vd.textContent = data.verdict;
+
+          if (axis === 'prestige_tier') {
+            const tierName = ['', 'Elite', 'Selective', 'Regional'];
+            const inst = side.appendChild(document.createElement('div'));
+            inst.style.cssText = 'font-size:.7rem;color:#9ca3af;margin-top:.3rem';
+            inst.textContent = data.institution + ' (' + (tierName[data.prestige_tier] || 'Tier ' + data.prestige_tier) + ')';
+          }
+
+          const sc = side.appendChild(document.createElement('div'));
+          sc.className = 'pair-skills';
+          (data.skills || []).slice(0, 4).forEach(sk => {
+            const ch = sc.appendChild(document.createElement('span'));
+            ch.className = 'pair-skill-chip'; ch.textContent = sk;
+          });
+          return side;
+        }
+
+        mkSide(p.base);
+
+        const mid = row.appendChild(document.createElement('div'));
+        mid.className = 'pair-middle';
+        const dv = mid.appendChild(document.createElement('div'));
+        dv.className = 'pair-delta-val ' + (p.delta > 0.005 ? 'pos' : p.delta < -0.005 ? 'neg' : 'zero');
+        const sign = p.delta > 0.005 ? '+' : '';
+        dv.textContent = sign + (p.delta * 100).toFixed(0) + ' pts';
+        const arr = mid.appendChild(document.createElement('div'));
+        arr.className = 'pair-arrow';
+        arr.textContent = p.abs_delta > 0.005 ? (p.delta > 0 ? '↑' : '↓') : '=';
+
+        mkSide(p.twin);
+      });
+    });
+  }
 
   gsap.from(panel.children, { opacity:0, y:16, duration:.45, stagger:.07, ease:'power2.out' });
 }

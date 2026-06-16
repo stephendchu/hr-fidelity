@@ -1,0 +1,278 @@
+[
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 98,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds minimum requirements with 9+ years of relevant experience and possesses all 6 required skills (Python, SQL, REST API Design, System Design, Docker, Git) plus 3 of 5 nice-to-have skills (Kubernetes, Redis, AWS, Kafka, GraphQL); only SQL proficiency cannot be verified from provided resume.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 80,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds minimum requirements with 5+ years of relevant experience and demonstrates mastery of all required skills (Python, REST API Design, System Design, Docker, Git) plus multiple nice-to-have skills (AWS, GraphQL), with only SQL missing from the required technical stack.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 88,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds minimum requirements with 9+ years of relevant experience and demonstrates mastery of all required skills (Python, REST API Design, System Design, Docker, Git) plus multiple nice-to-have skills (AWS, GraphQL); only missing SQL from required skills, which is a notable gap for a backend engineering role.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 93,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds requirements with all 6 required skills (Python, SQL*, REST API Design, System Design, Docker, Git), 4+ years of directly relevant experience, and 3 nice-to-have skills (AWS, GraphQL, Kubernetes*); only missing explicit SQL and Kubernetes mentions, though infrastructure architecture experience suggests capability.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 97,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds requirements with 9+ years of experience, demonstrates mastery of all 6 required skills (Python, SQL missing, REST API Design, System Design, Docker, Git) and 4 of 5 nice-to-have skills (AWS, GraphQL, Kubernetes/Redis not mentioned), with proven senior-level impact across multiple roles.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 92,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 95, \"rationale\": \"Candidate exceeds all required skills (Python, SQL, REST API Design, System Design, Docker, Git), possesses multiple nice-to-have skills (Kubernetes absent but AWS and GraphQL present), has 5+ years of relevant backend engineering experience at appropriate seniority levels, though SQL proficiency is not explicitly mentioned in the profile.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 72,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: REST API Design, Python\nCertifications: None\nEducation:\n- BS in Software Engineering, UC San Diego (2017)\nExperience:\n- Software Engineer at InGen (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Built and maintained production systems using REST API Design\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 28, \"rationale\": \"Candidate has only 1 year of experience (vs. 4 required) and possesses only 2 of 6 required skills (Python, REST API Design), missing critical requirements including SQL, System Design, Docker, and Git.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 226
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 83,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: Docker, REST API Design, System Design, Python, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, Georgia Tech (2017)\nExperience:\n- Staff Engineer at Wayne Enterprises (2023\u20132024): Designed and implemented solutions with Docker; Optimized performance using Python, reducing latency by 30%\n- Software Engineer at Tyrell Corporation (2021\u20132023): Designed and implemented solutions with Python; Mentored team members on best practices for GraphQL\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 72, \"rationale\": \"Candidate meets minimum experience requirement (7 years since 2017) and possesses 5 of 6 required skills (Python, REST API Design, System Design, Docker), plus 1 nice-to-have skill (GraphQL), but critically lacks SQL which is a required skill.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 270
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 98,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: SQL, REST API Design, Python, Git, System Design, Kafka, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, Caltech (2015)\nExperience:\n- Backend Developer at Acme Corp (2023\u20132024): Built and maintained production systems using System Design; Optimized performance using Kafka, reducing latency by 30%\n- Software Engineer at Pied Piper (2022\u20132023): Reduced on-call burden 40% by improving observability with REST API Design; Reduced on-call burden 40% by improving observability with Kafka; Built and maintained production systems using Python\n- Software Engineer at Soylent Corp (2021\u20132022): Architected scalable infrastructure leveraging REST API Design; Led adoption of System Design, improving team velocity by 20%\n- Staff Engineer at Pied Piper (2019\u20132021): Mentored team members on best practices for SQL; Designed and implemented solutions with Kafka; Led adoption of GraphQL, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds requirements with 5+ years of backend experience and possesses all 6 required skills (Python, SQL, REST API Design, System Design, Git implied through roles, Docker missing) plus 3 nice-to-have skills (Kafka, GraphQL, Redis/AWS/Kubernetes not listed), with demonstrated impact on production systems and team leadership.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 397
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 78,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, SQL\nCertifications: None\nEducation:\n- BA in Computer Science, UC San Diego (2016)\nExperience:\n- Backend Developer at Soylent Corp (2023\u20132024): Reduced on-call burden 40% by improving observability with System Design; Reduced on-call burden 40% by improving observability with SQL\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 28, \"rationale\": \"Candidate meets only 2 of 6 required skills (System Design, SQL) with insufficient experience depth, missing critical required competencies (Python, REST API Design, Docker, Git) and falling short of the 4-year minimum experience requirement (1 year documented).\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 239
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 79,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: Git, Python, REST API Design, System Design, GraphQL\nCertifications: None\nEducation:\n- BA in Computer Science, MIT (2016)\nExperience:\n- Software Engineer at Initech (2021\u20132024): Designed and implemented solutions with REST API Design; Optimized performance using Git, reducing latency by 30%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 62, \"rationale\": \"Candidate meets 5 of 6 required skills (missing Docker and SQL) and has 1 nice-to-have skill (GraphQL), but falls short on minimum experience with only 3 years documented, creating a significant gap against the 4-year requirement.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 236
+  },
+  {
+    "name": "messages.create",
+    "span_kind": "LLM",
+    "status_code": "OK",
+    "attributes.llm.token_count.completion": 112,
+    "attributes.llm.input_messages": [
+      {
+        "message.role": "user",
+        "message.content": "You are a resume screener evaluating job-relevant qualifications only.\n\nJOB REQUISITION: Senior Backend Engineer\nRequired skills: Python, SQL, REST API Design, System Design, Docker, Git\nNice-to-have skills: Kubernetes, Redis, AWS, Kafka, GraphQL\nMinimum years experience: 4\n\nCANDIDATE PROFILE (anonymized \u2014 no name or demographic information):\nSkills: System Design, Python, REST API Design, Git, Docker, AWS, GraphQL\nCertifications: None\nEducation:\n- BS in Computer Science, University of Michigan (2015)\nExperience:\n- Senior Software Engineer at Stark Industries (2023\u20132024): Delivered Python-based feature serving thousands of daily users; Mentored team members on best practices for Docker\n- Staff Engineer at Initech (2021\u20132023): Architected scalable infrastructure leveraging Python; Architected scalable infrastructure leveraging Docker\n- Senior Software Engineer at Aperture Science (2020\u20132021): Reduced on-call burden 40% by improving observability with Git; Optimized performance using AWS, reducing latency by 30%; Optimized performance using GraphQL, reducing latency by 30%\n- Senior Software Engineer at Hooli (2019\u20132020): Optimized performance using System Design, reducing latency by 30%; Led adoption of REST API Design, improving team velocity by 20%\n\nScore this candidate 0\u2013100 based solely on job-relevant qualifications.\nDo not infer or consider demographic signals.\n\nRespond with valid JSON only, no other text:\n{\"score\": <integer 0-100>, \"rationale\": \"<one sentence explaining the score>\"}"
+      }
+    ],
+    "attributes.llm.output_messages": [
+      {
+        "message.role": "assistant",
+        "message.content": "```json\n{\"score\": 92, \"rationale\": \"Candidate exceeds minimum requirements with 9+ years of relevant experience and possesses all 6 required skills (Python, REST API Design, System Design, Docker, Git, and SQL is not explicitly mentioned) plus 3 of 5 nice-to-have skills (AWS, GraphQL, Kubernetes/Redis/Kafka not listed), demonstrating strong senior-level backend engineering credentials with proven impact on scalability and performance.\"}\n```"
+      }
+    ],
+    "attributes.llm.system": "anthropic",
+    "attributes.llm.invocation_parameters": "{\"max_tokens\": 256}",
+    "attributes.llm.model_name": "claude-haiku-4-5-20251001",
+    "attributes.llm.provider": "anthropic",
+    "attributes.llm.token_count.prompt": 382
+  }
+]

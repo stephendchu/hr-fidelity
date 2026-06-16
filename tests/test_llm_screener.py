@@ -171,6 +171,40 @@ def test_score_api_call_excludes_name(resume, req):
     assert "Washington" not in prompt_text
 
 
+# ── Tracing: custom span attributes must attach to a recording span ───────────
+
+def test_score_emits_recording_span_with_custom_attributes(resume, req):
+    """Regression: the hr_fidelity.* attributes were set on a non-recording
+    default span (no active span outside the instrumented LLM call), so they
+    never reached Phoenix. score() must open its own recording span."""
+    pytest.importorskip("opentelemetry.sdk")
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+
+    with patch.object(llm_screener, "_get_client", return_value=_mock_client(score=78)):
+        with patch.object(llm_screener, "_tracer",
+                          return_value=provider.get_tracer("test")):
+            llm_screener.score(resume, req)
+
+    spans = exporter.get_finished_spans()
+    assert len(spans) == 1, "score() should emit exactly one screener span"
+    attrs = spans[0].attributes
+    assert attrs["hr_fidelity.candidate_id"] == resume.candidate_id
+    assert attrs["hr_fidelity.req_id"] == req.id
+    assert attrs["hr_fidelity.latent_fit"] == resume.latent_fit
+    assert attrs["hr_fidelity.screener"] == "llm"
+    assert attrs["hr_fidelity.raw_score"] == pytest.approx(0.78)
+    assert attrs["hr_fidelity.verdict"] == "advance"
+
+
 # ── Integration (real API — skip if no key) ───────────────────────────────────
 
 @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
